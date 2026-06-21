@@ -29,7 +29,7 @@ export default function ThankYou() {
             <p className="text-muted mb-6">
               Your gift{data ? <> of <b className="text-ink">{money(data.amount)}</b> toward <b className="text-ink">{data.gift_title}</b></> : ''} was received. The couple will be so grateful.
             </p>
-            <Link to={`/r/${slug}`} className="btn-primary w-full">Back to the registry</Link>
+            <Link to={`/r/${slug}`} className="btn-primary w-full">Back to the event</Link>
           </>
         )}
 
@@ -38,7 +38,7 @@ export default function ThankYou() {
             <div className="w-16 h-16 rounded-full mx-auto mb-4 grid place-items-center text-white text-3xl bg-muted">!</div>
             <h1 className="text-3xl font-semibold mb-2">Payment not confirmed</h1>
             <p className="text-muted mb-6">We couldn’t confirm this payment. If you were charged, it will reflect shortly — or try again.</p>
-            <Link to={`/r/${slug}`} className="btn-primary w-full">Back to the registry</Link>
+            <Link to={`/r/${slug}`} className="btn-primary w-full">Back to the event</Link>
           </>
         )}
       </div>

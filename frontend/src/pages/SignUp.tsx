@@ -32,8 +32,8 @@ export default function SignUp() {
 
   return (
     <AuthShell
-      title="Create your registry"
-      subtitle="It’s free — start your wedding wish list in under a minute."
+      title="Create your event"
+      subtitle="It’s free — set up your event page in under a minute."
       footer={<>Already have an account? <Link to="/login" className="text-rose-deep font-semibold">Log in</Link></>}
     >
       <form onSubmit={submit} className="space-y-4">
@@ -54,7 +54,7 @@ export default function SignUp() {
             value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required />
         </div>
         <button className="btn-primary w-full" disabled={busy}>
-          {busy ? 'Creating…' : 'Create my registry'}
+          {busy ? 'Creating…' : 'Create my event'}
         </button>
         <p className="text-xs text-muted text-center">No payment needed to start.</p>
       </form>

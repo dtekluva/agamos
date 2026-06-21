@@ -31,8 +31,8 @@ export default function Login() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Log in to manage your registry."
-      footer={<>New here? <Link to="/signup" className="text-rose-deep font-semibold">Create a registry</Link></>}
+      subtitle="Log in to manage your events."
+      footer={<>New here? <Link to="/signup" className="text-rose-deep font-semibold">Create an event</Link></>}
     >
       <form onSubmit={submit} className="space-y-4">
         {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}
