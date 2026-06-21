@@ -75,6 +75,12 @@ def event_shell(request, slug, rest=None):
             if not cover:
                 tags.append('<meta property="og:image:width" content="1200">')
                 tags.append('<meta property="og:image:height" content="630">')
+            # Strip the static homepage SEO/OG tags so the event-specific ones win
+            # (no duplicate/conflicting og:title, robots, etc. on shared event links).
+            html = re.sub(
+                r'\s*<meta (?:property="og:[^"]*"|name="twitter:[^"]*"|name="description"|name="robots")[^>]*>',
+                "", html)
+            html = re.sub(r'\s*<link rel="canonical"[^>]*>', "", html)
             # Use the event's own name as the document title (tab + crawlers).
             html = re.sub(r"<title>.*?</title>", f"<title>{escape(title)}</title>", html, count=1, flags=re.S)
             html = html.replace("</head>", "\n".join(tags) + "\n</head>", 1)
