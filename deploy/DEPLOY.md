@@ -130,15 +130,17 @@ sudo ufw allow 'Nginx Full'
 sudo ufw enable
 ```
 
-## 8. Paystack webhook
+## 8. Paystack (verification model — no webhook)
 
-In the Paystack dashboard, set the webhook URL to:
+Agamos confirms payments by **querying Paystack directly**, so no webhook setup is
+needed (handy when the Paystack account's single webhook URL is used by another app):
 
-```
-https://agamos.events/api/paystack/webhook
-```
+- **Contributions:** confirmed via `GET /transaction/verify/:ref` on the payment callback,
+  and any still-pending ones are re-checked whenever the host opens their Contributions list.
+- **Withdrawals:** transfer status is confirmed via `GET /transfer/verify/:ref`, reconciled
+  whenever the host opens their Withdrawals list.
 
-(The backend verifies the `x-paystack-signature` header against your secret key.)
+Just set the live `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` in `backend/.env`.
 
 ---
 

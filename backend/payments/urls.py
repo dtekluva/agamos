@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    ContributionInitView, ContributionVerifyView, PaystackWebhookView,
+    ContributionInitView, ContributionVerifyView,
     ContributionListView, ContributionThankView, WithdrawalListCreateView, DashboardView,
 )
 
@@ -12,5 +12,4 @@ urlpatterns = [
     path("contributions", ContributionListView.as_view()),
     path("withdrawals", WithdrawalListCreateView.as_view()),
     path("dashboard", DashboardView.as_view()),
-    path("paystack/webhook", PaystackWebhookView.as_view()),
 ]

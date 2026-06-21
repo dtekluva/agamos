@@ -1,7 +1,5 @@
 """Paystack integration. Runs in MOCK mode when no secret key is configured so the
 full contribution + withdrawal flow is demoable without live credentials."""
-import hashlib
-import hmac
 import secrets
 
 import requests
@@ -77,12 +75,28 @@ def verify_transaction(reference):
     return "failed", d.get("amount")
 
 
-def verify_signature(secret, body_bytes, signature):
-    digest = hmac.new(secret.encode(), body_bytes, hashlib.sha512).hexdigest()
-    return hmac.compare_digest(digest, signature or "")
-
-
 # ---------- Transfers (withdrawals) ----------
+
+def verify_transfer(reference):
+    """Confirm a withdrawal/transfer directly with Paystack (no webhook needed).
+    Returns paid|processing|failed."""
+    if settings.PAYSTACK_MOCK_MODE:
+        return "paid"
+    try:
+        resp = requests.get(
+            f"{PAYSTACK}/transfer/verify/{reference}", headers=_headers(), timeout=20
+        )
+        data = resp.json()
+    except requests.RequestException:
+        return "processing"  # transient network issue — next reconcile will retry
+    if not data.get("status"):
+        return "processing"
+    raw = (data.get("data") or {}).get("status")
+    if raw == "success":
+        return "paid"
+    if raw in ("failed", "reversed", "abandoned"):
+        return "failed"
+    return "processing"  # pending, otp, received, etc.
 
 def create_transfer_recipient(*, name, account_number, bank_code):
     if settings.PAYSTACK_MOCK_MODE:

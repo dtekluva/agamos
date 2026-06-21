@@ -16,6 +16,36 @@ from .serializers import (
 )
 from . import services
 
+# How many stale records to reconcile against Paystack per list request (bounds latency).
+_RECONCILE_CAP = 25
+
+
+def _reconcile_contributions(qs):
+    """Confirm still-pending contributions directly with Paystack (replaces the webhook).
+    Catches cases where the guest closed the tab before the verify callback ran."""
+    for c in qs.filter(status="pending").order_by("-created_at")[:_RECONCILE_CAP]:
+        mapped, amount_kobo = services.verify_transaction(c.reference)
+        if mapped == "success":
+            c.status = "success"
+            c.paid_at = timezone.now()
+            if amount_kobo:
+                c.amount = Decimal(amount_kobo) / 100
+            c.save(update_fields=["status", "paid_at", "amount"])
+        elif mapped == "failed":
+            c.status = "failed"
+            c.save(update_fields=["status"])
+
+
+def _reconcile_withdrawals(qs):
+    """Confirm still-processing transfers directly with Paystack (replaces the webhook)."""
+    for w in qs.filter(status="processing").order_by("-id")[:_RECONCILE_CAP]:
+        mapped = services.verify_transfer(w.reference)
+        if mapped in ("paid", "failed") and mapped != w.status:
+            w.status = mapped
+            if mapped == "paid":
+                w.processed_at = timezone.now()
+            w.save(update_fields=["status", "processed_at"])
+
 
 class ContributionInitView(APIView):
     """Guest starts a gift contribution -> creates a pending Contribution and a
@@ -85,40 +115,16 @@ class ContributionVerifyView(APIView):
         return Response(ContributionSerializer(contribution).data)
 
 
-class PaystackWebhookView(APIView):
-    """Source-of-truth confirmation from Paystack (charge.success). Idempotent."""
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
-
-    def post(self, request):
-        signature = request.headers.get("x-paystack-signature")
-        if not settings.PAYSTACK_MOCK_MODE:
-            if not services.verify_signature(settings.PAYSTACK_SECRET_KEY, request.body, signature):
-                return Response({"detail": "invalid signature"}, status=401)
-        event = request.data or {}
-        evt = event.get("event")
-        ref = (event.get("data") or {}).get("reference")
-        if evt == "charge.success" and ref:
-            Contribution.objects.filter(reference=ref, status="pending").update(
-                status="success", paid_at=timezone.now()
-            )
-        elif evt in ("transfer.success", "transfer.failed", "transfer.reversed") and ref:
-            new_status = "paid" if evt == "transfer.success" else "failed"
-            Withdrawal.objects.filter(reference=ref).exclude(status="paid").update(
-                status=new_status, processed_at=timezone.now()
-            )
-        return Response({"status": "ok"})
-
-
 class ContributionListView(generics.ListAPIView):
     """Owner views who contributed to their registry's gifts."""
     serializer_class = ContributionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = Contribution.objects.filter(
-            gift__registry__owner=self.request.user
-        ).select_related("gift")
+        base = Contribution.objects.filter(gift__registry__owner=self.request.user)
+        # Reconcile any still-pending payments with Paystack before listing.
+        _reconcile_contributions(base)
+        qs = base.select_related("gift")
         rid = self.request.query_params.get("registry")
         if rid:
             qs = qs.filter(gift__registry_id=rid)
@@ -150,7 +156,10 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = Withdrawal.objects.filter(registry__owner=self.request.user)
+        base = Withdrawal.objects.filter(registry__owner=self.request.user)
+        # Reconcile any still-processing transfers with Paystack before listing.
+        _reconcile_withdrawals(base)
+        qs = base
         rid = self.request.query_params.get("registry")
         if rid:
             qs = qs.filter(registry_id=rid)
