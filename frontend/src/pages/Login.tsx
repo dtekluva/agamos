@@ -1,12 +1,12 @@
 import { FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 import AuthShell from '../components/AuthShell'
 import PasswordInput from '../components/PasswordInput'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { user, loading, login } = useAuth()
   const toast = useToast()
   const nav = useNavigate()
   const [email, setEmail] = useState('')
@@ -28,6 +28,9 @@ export default function Login() {
       setBusy(false)
     }
   }
+
+  // Already signed in? Skip the form and go straight to the dashboard.
+  if (!loading && user) return <Navigate to="/dashboard" replace />
 
   return (
     <AuthShell

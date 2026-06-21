@@ -1,12 +1,12 @@
 import { FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 import AuthShell from '../components/AuthShell'
 import PasswordInput from '../components/PasswordInput'
 
 export default function SignUp() {
-  const { register } = useAuth()
+  const { user, loading, register } = useAuth()
   const toast = useToast()
   const nav = useNavigate()
   const [fullName, setFullName] = useState('')
@@ -30,6 +30,9 @@ export default function SignUp() {
       setBusy(false)
     }
   }
+
+  // Already signed in? No need to register again — go to the dashboard.
+  if (!loading && user) return <Navigate to="/dashboard" replace />
 
   return (
     <AuthShell
