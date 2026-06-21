@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { EVENT_LIST } from '../lib/eventTypes'
+import { usePageTitle } from '../lib/usePageTitle'
 
 export default function Landing() {
+  usePageTitle('Agamos — Gift lists & cash funds for every celebration')
   return (
     <div className="min-h-screen">
       {/* Nav */}

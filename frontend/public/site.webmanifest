@@ -1,0 +1,14 @@
+{
+  "name": "Agamos — Gift lists for every celebration",
+  "short_name": "Agamos",
+  "description": "Create a beautiful gift-list page for weddings, anniversaries, baby showers, birthdays and memorials — and let friends fund the gifts that matter.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF6F1",
+  "theme_color": "#6D2E46",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -5,6 +5,7 @@ import { money, prettyDate } from '../../lib/format'
 import { apiError } from '../../lib/errors'
 import { useRegistry } from '../../lib/registry'
 import { useToast } from '../../lib/toast'
+import { BANKS } from '../../lib/banks'
 
 const emptyBank = { bank_name: '', bank_code: '', account_number: '', account_name: '' }
 
@@ -101,9 +102,24 @@ export default function Withdrawals() {
             {!hasBank && <p className="text-sm text-muted mb-4">Add the bank account where we’ll send your withdrawals.</p>}
             {bankErr && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2 mb-3">{bankErr}</div>}
             <div className="grid sm:grid-cols-2 gap-4">
-              <div><label className="label">Bank name</label><input className="input" value={bank.bank_name} onChange={(e) => setB('bank_name', e.target.value)} placeholder="GTBank" required /></div>
-              <div><label className="label">Bank code</label><input className="input" value={bank.bank_code} onChange={(e) => setB('bank_code', e.target.value)} placeholder="058 (Paystack bank code)" /></div>
-              <div><label className="label">Account number</label><input className="input" value={bank.account_number} onChange={(e) => setB('account_number', e.target.value)} placeholder="0123456789" required /></div>
+              <div className="sm:col-span-2">
+                <label className="label">Bank</label>
+                <select
+                  className="input"
+                  value={bank.bank_code}
+                  onChange={(e) => {
+                    const b = BANKS.find((x) => x.code === e.target.value)
+                    setBank((prev) => ({ ...prev, bank_code: e.target.value, bank_name: b?.name || '' }))
+                  }}
+                  required
+                >
+                  <option value="">Select your bank…</option>
+                  {BANKS.map((b, i) => (
+                    <option key={`${b.code}-${i}`} value={b.code}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div><label className="label">Account number</label><input className="input" value={bank.account_number} onChange={(e) => setB('account_number', e.target.value)} placeholder="0123456789" inputMode="numeric" maxLength={10} required /></div>
               <div><label className="label">Account name</label><input className="input" value={bank.account_name} onChange={(e) => setB('account_name', e.target.value)} placeholder="Account holder name" required /></div>
             </div>
             <div className="flex justify-end gap-3 mt-4">

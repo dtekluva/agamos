@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+# Personal event pages are private (shared by link, not for search indexing).
+Disallow: /r/
+# App internals shouldn't be crawled.
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://agamos.events/sitemap.xml

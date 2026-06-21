@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import api from '../lib/api'
 import { apiError } from '../lib/errors'
 import AuthShell from '../components/AuthShell'
+import { usePageTitle } from '../lib/usePageTitle'
 
 const CONTACT_EMAIL = 'getagamos@gmail.com'
 
 export default function Contact() {
+  usePageTitle('Contact us — Agamos')
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')

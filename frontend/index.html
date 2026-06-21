@@ -2,9 +2,84 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agamos — Give what they truly wish for</title>
+
+    <!-- Primary meta -->
+    <title>Agamos — Gift lists & cash funds for every celebration</title>
+    <meta name="description" content="Create a beautiful gift-list page for weddings, anniversaries, baby showers, birthdays and memorials. Let friends and family fund the gifts and goals that matter — no duplicates, no awkward cash. Withdraw straight to your bank." />
+    <meta name="keywords" content="gift registry, wedding registry, cash gift fund, baby shower registry, birthday gift list, group gifting, Nigeria gift registry, honeymoon fund, crowdfunding gifts, Agamos" />
+    <meta name="author" content="Agamos" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://agamos.events/" />
+    <meta name="theme-color" content="#6D2E46" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Icons / PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Agamos" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Agamos" />
+    <meta property="og:title" content="Agamos — Give what they truly wish for" />
+    <meta property="og:description" content="Create a beautiful gift-list page for any celebration and let friends fund the gifts and goals that matter. Weddings, birthdays, baby showers, anniversaries & memorials." />
+    <meta property="og:url" content="https://agamos.events/" />
+    <meta property="og:image" content="https://agamos.events/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Agamos — gift lists for every celebration" />
+    <meta property="og:locale" content="en_NG" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Agamos — Give what they truly wish for" />
+    <meta name="twitter:description" content="Gift lists & cash funds for weddings, birthdays, baby showers, anniversaries and memorials. Fund the gifts that matter; withdraw to your bank." />
+    <meta name="twitter:image" content="https://agamos.events/og-image.png" />
+
+    <!-- Performance: warm up font + payments origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://js.paystack.co" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://agamos.events/#organization",
+          "name": "Agamos",
+          "url": "https://agamos.events/",
+          "logo": "https://agamos.events/icon-512.png",
+          "description": "Gift-list and cash-fund pages for every celebration.",
+          "email": "getagamos@gmail.com"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://agamos.events/#website",
+          "url": "https://agamos.events/",
+          "name": "Agamos",
+          "publisher": { "@id": "https://agamos.events/#organization" },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "WebApplication",
+          "name": "Agamos",
+          "url": "https://agamos.events/",
+          "applicationCategory": "LifestyleApplication",
+          "operatingSystem": "Web",
+          "description": "Create a gift-list page for weddings, anniversaries, baby showers, birthdays and memorials, and let friends fund the gifts and goals that matter.",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "NGN" }
+        }
+      ]
+    }
+    </script>
+
     <script src="https://js.paystack.co/v1/inline.js"></script>
   </head>
   <body>
