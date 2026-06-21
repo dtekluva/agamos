@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRegistry } from '../../lib/registry'
+import api from '../../lib/api'
 import { apiError, normalizeUrl } from '../../lib/errors'
 import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
@@ -20,10 +21,11 @@ const EMPTY = {
 }
 
 export default function RegistrySettings({ forceNew = false }: { forceNew?: boolean }) {
-  const { registry, create, update, remove, loading } = useRegistry()
+  const { registry, create, update, remove, reload, loading } = useRegistry()
   const toast = useToast()
   const nav = useNavigate()
   const [form, setForm] = useState<any>(EMPTY)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -77,8 +79,15 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
       cover_image_url: normalizeUrl(form.cover_image_url),
     }
     try {
-      if (isNew) await create(payload)
-      else await update(payload)
+      const saved = isNew ? await create(payload) : await update(payload)
+      // Upload the cover file (if chosen) to the now-saved event, then refresh.
+      if (coverFile && saved?.id) {
+        const fd = new FormData()
+        fd.append('cover_image', coverFile)
+        await api.patch(`/registries/${saved.id}/`, fd)
+        await reload()
+        setCoverFile(null)
+      }
       toast.success(isNew ? `Your ${cfg.label.toLowerCase()} page is live! 🎉` : 'Event page saved')
       if (forceNew) nav('/dashboard/registry')
     } catch (e2: any) {
@@ -155,7 +164,21 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
       {/* Public page */}
       <section className="card p-6 space-y-4">
         <h3 className="font-semibold">Your public page</h3>
-        <div><label className="label">Cover image URL</label><input className="input" placeholder="https://…" value={form.cover_image_url} onChange={(e) => set('cover_image_url', e.target.value)} /></div>
+        <div>
+          <label className="label">Cover image</label>
+          {(coverFile || form.cover_image_url || registry?.cover) && (
+            <div className="h-32 rounded-xl bg-soft bg-cover bg-center mb-2 border border-line"
+                 style={{ backgroundImage: `url(${coverFile ? URL.createObjectURL(coverFile) : (form.cover_image_url || registry?.cover)})` }} />
+          )}
+          <label className="flex items-center gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm cursor-pointer hover:border-rose">
+            <span className="btn-ghost btn-sm">Upload image</span>
+            <span className="text-muted truncate">{coverFile ? coverFile.name : 'JPG or PNG from your device'}</span>
+            <input type="file" accept="image/*" className="hidden"
+                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
+          </label>
+          <input className="input mt-2" placeholder="…or paste an image URL" value={form.cover_image_url}
+                 onChange={(e) => set('cover_image_url', e.target.value)} disabled={!!coverFile} />
+        </div>
         <div><label className="label">Headline message</label><input className="input" placeholder={cfg.heroKicker(form)} value={form.hero_message} onChange={(e) => set('hero_message', e.target.value)} /></div>
         <div><label className="label">{cfg.storyToggleLabel}</label><textarea className="input min-h-[120px]" value={form.our_story} onChange={(e) => set('our_story', e.target.value)} /></div>
         <div className="grid sm:grid-cols-2 gap-4">
