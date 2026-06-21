@@ -11,3 +11,5 @@ gunicorn==21.2.0
 cloudinary==1.32.0
 django-cloudinary-storage==0.3.0
 psycopg2-binary==2.9.9
+# pkg_resources (needed by simplejwt 5.2) was removed from setuptools 81+ on Python 3.12.
+setuptools<81
