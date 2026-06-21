@@ -271,11 +271,15 @@ export default function PublicRegistry() {
                         {g.fully_funded && <span className="chip bg-success/10 text-success">{isMemorial ? 'Goal met ✓' : 'Funded ✓'}</span>}
                       </div>
                       {g.description && <p className="text-sm text-muted mt-1 line-clamp-2">{g.description}</p>}
-                      <div className="progress mt-3"><i style={barStyle(g.pct_funded)} /></div>
-                      <div className="flex justify-between text-sm text-muted mt-1.5">
-                        <span><b style={accent}>{money(g.amount_raised, cur)}</b> raised</span>
-                        <span>of {money(g.target_amount, cur)}</span>
-                      </div>
+                      {g.show_progress && (
+                        <>
+                          <div className="progress mt-3"><i style={barStyle(g.pct_funded)} /></div>
+                          <div className="flex justify-between text-sm text-muted mt-1.5">
+                            <span><b style={accent}>{money(g.amount_raised, cur)}</b> raised</span>
+                            <span>of {money(g.target_amount, cur)}</span>
+                          </div>
+                        </>
+                      )}
                       <div className="mt-4 pt-2">
                         {g.fully_funded ? (
                           <button className="btn-ghost w-full" disabled>{isMemorial ? 'Thank you 🤍' : 'Fully funded 🎉'}</button>

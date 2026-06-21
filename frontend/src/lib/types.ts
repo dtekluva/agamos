@@ -11,6 +11,7 @@ export interface Gift {
   target_amount: string
   allow_partial: boolean
   is_cash_fund: boolean
+  show_progress: boolean
   sort_order: number
   archived: boolean
   amount_raised: number

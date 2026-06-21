@@ -32,6 +32,7 @@ class Gift(models.Model):
     target_amount = models.DecimalField(max_digits=12, decimal_places=2)
     allow_partial = models.BooleanField(default=True)
     is_cash_fund = models.BooleanField(default=False)
+    show_progress = models.BooleanField(default=True)  # show the funding bar/amounts publicly
     sort_order = models.PositiveIntegerField(default=0)
     archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

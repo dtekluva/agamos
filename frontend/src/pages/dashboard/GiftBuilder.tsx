@@ -8,7 +8,7 @@ import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
 import type { Gift } from '../../lib/types'
 
-const blank = { title: '', description: '', image_url: '', category: 'other', target_amount: '', allow_partial: true, is_cash_fund: false }
+const blank = { title: '', description: '', image_url: '', category: 'other', target_amount: '', allow_partial: true, is_cash_fund: false, show_progress: true }
 const catLabel = (c: string) => c.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 
 export default function GiftBuilder() {
@@ -38,7 +38,7 @@ export default function GiftBuilder() {
 
   const openNew = () => { setForm({ ...blank, category: CATEGORIES[0] || 'other', is_cash_fund: isMemorial }); setFile(null); setEditing('new') }
   const openEdit = (g: Gift) => {
-    setForm({ title: g.title, description: g.description, image_url: g.image_url, category: g.category, target_amount: g.target_amount, allow_partial: g.allow_partial, is_cash_fund: g.is_cash_fund })
+    setForm({ title: g.title, description: g.description, image_url: g.image_url, category: g.category, target_amount: g.target_amount, allow_partial: g.allow_partial, is_cash_fund: g.is_cash_fund, show_progress: g.show_progress })
     setFile(null); setEditing(g.id)
   }
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
@@ -57,6 +57,7 @@ export default function GiftBuilder() {
         body.append('target_amount', form.target_amount || '0')
         body.append('allow_partial', String(form.allow_partial))
         body.append('is_cash_fund', String(form.is_cash_fund))
+        body.append('show_progress', String(form.show_progress))
         body.append('image', file)
       } else {
         body = {
@@ -137,6 +138,17 @@ export default function GiftBuilder() {
                 </label>
                 <p className="text-xs text-muted ml-6 mt-0.5">A flexible money goal — guests give whatever they like.</p>
               </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={form.show_progress} onChange={(e) => set('show_progress', e.target.checked)} />
+                  Show funding progress
+                </label>
+                <p className="text-xs text-muted ml-6 mt-0.5">
+                  {form.show_progress
+                    ? 'Guests see the progress bar and how much has been raised.'
+                    : 'The progress bar and amounts are hidden from guests.'}
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3">
@@ -158,6 +170,7 @@ export default function GiftBuilder() {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold truncate">{g.title}</h3>
                   <div className="flex gap-1.5 shrink-0">
+                    {!g.show_progress && <span className="chip bg-soft text-muted" title="Funding progress is hidden from guests">Progress hidden</span>}
                     {!g.allow_partial && !g.is_cash_fund && <span className="chip bg-soft text-muted" title="Guests must fund the full amount">Full amount</span>}
                     <span className="chip">{g.category}</span>
                   </div>
