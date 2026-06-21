@@ -57,9 +57,14 @@ python manage.py collectstatic --noinput
 python manage.py createsuperuser
 ```
 
-> **Database:** SQLite is fine to launch. For scale, switch `DATABASES` to Postgres
-> (`apt install postgresql`, create a DB/user, set `DATABASE_URL` and read it in
-> settings) before going big.
+> **Database (PostgreSQL):** production uses Postgres. Provision it once:
+> ```bash
+> apt-get install -y postgresql
+> sudo -u postgres psql -c "CREATE USER agamos WITH PASSWORD 'STRONG_PASSWORD';"
+> sudo -u postgres psql -c "CREATE DATABASE agamos OWNER agamos;"
+> ```
+> Then set `POSTGRES_DB`/`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_HOST`/`POSTGRES_PORT`
+> in `backend/.env`. When `POSTGRES_DB` is unset, the app falls back to SQLite (local dev).
 
 > **Media uploads:** set `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` /
 > `CLOUDINARY_API_SECRET` in `.env` so uploaded images go to Cloudinary's CDN instead of
