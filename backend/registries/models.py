@@ -141,8 +141,17 @@ class Registry(models.Model):
         return agg["s"] or 0
 
     @property
+    def total_committed(self):
+        """Funds already claimed by withdrawals — paid, in-flight, or queued for
+        settlement — so they can't be requested twice."""
+        agg = self.withdrawals.filter(
+            status__in=["paid", "processing", "queued"]
+        ).aggregate(s=Sum("amount"))
+        return agg["s"] or 0
+
+    @property
     def available_balance(self):
-        return self.total_raised - self.total_withdrawn
+        return self.total_raised - self.total_committed
 
 
 class StoryMoment(models.Model):

@@ -34,6 +34,7 @@ class Contribution(models.Model):
 class Withdrawal(models.Model):
     STATUS = [
         ("requested", "Requested"),
+        ("queued", "Queued"),        # awaiting Paystack settlement; retried automatically
         ("processing", "Processing"),
         ("paid", "Paid"),
         ("failed", "Failed"),

@@ -36,6 +36,11 @@ def _reconcile_contributions(qs):
             c.save(update_fields=["status"])
 
 
+def _is_unsettled(msg):
+    m = (msg or "").lower()
+    return "balance is not enough" in m or "insufficient" in m
+
+
 def _reconcile_withdrawals(qs):
     """Confirm still-processing transfers directly with Paystack (replaces the webhook)."""
     for w in qs.filter(status="processing").order_by("-id")[:_RECONCILE_CAP]:
@@ -45,6 +50,38 @@ def _reconcile_withdrawals(qs):
             if mapped == "paid":
                 w.processed_at = timezone.now()
             w.save(update_fields=["status", "processed_at"])
+
+
+def process_queued_withdrawals(qs):
+    """Retry withdrawals that were queued because funds hadn't settled with Paystack.
+    Sends them now if the balance is available; otherwise leaves them queued."""
+    for w in qs.filter(status="queued").order_by("id")[:_RECONCILE_CAP]:
+        reg = w.registry
+        try:
+            recipient = reg.paystack_recipient_code
+            if not recipient:
+                recipient = services.create_transfer_recipient(
+                    name=reg.account_name or reg.couple_names,
+                    account_number=reg.account_number,
+                    bank_code=reg.bank_code or reg.bank_name,
+                )
+                reg.paystack_recipient_code = recipient
+                reg.save(update_fields=["paystack_recipient_code"])
+            result = services.initiate_transfer(
+                amount_kobo=int(w.amount * 100), recipient_code=recipient,
+                reason=f"Agamos payout — {reg.couple_names}", reference=w.reference,
+            )
+        except services.PaystackError as e:
+            if _is_unsettled(str(e)):
+                continue  # still not settled — keep it queued for the next run
+            w.status = "failed"
+            w.save(update_fields=["status"])
+            continue
+        paid = result.get("status") == "success"
+        w.status = "paid" if paid else "processing"
+        w.paystack_transfer_code = result.get("transfer_code", "")
+        w.processed_at = timezone.now() if paid else None
+        w.save(update_fields=["status", "paystack_transfer_code", "processed_at"])
 
 
 class ContributionInitView(APIView):
@@ -157,7 +194,8 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         base = Withdrawal.objects.filter(registry__owner=self.request.user)
-        # Reconcile any still-processing transfers with Paystack before listing.
+        # Retry queued payouts (settled now?) then confirm in-flight transfers.
+        process_queued_withdrawals(base)
         _reconcile_withdrawals(base)
         qs = base
         rid = self.request.query_params.get("registry")
@@ -200,14 +238,11 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
             )
         except services.PaystackError as e:
             msg = str(e)
-            if "balance is not enough" in msg.lower() or "insufficient" in msg.lower():
-                # Funds simply haven't settled with Paystack yet — a try-again-later
-                # situation, not a real failure, so don't record a failed withdrawal.
-                raise ValidationError({"detail": (
-                    "These funds haven’t settled with Paystack yet. Contributions usually "
-                    "become withdrawable the next business day, after Paystack settles them. "
-                    "Please try again then."
-                )})
+            if _is_unsettled(msg):
+                # Funds haven't settled with Paystack yet — queue it and send it
+                # automatically once settlement lands (no failure shown to the host).
+                serializer.save(reference=reference, status="queued")
+                return
             serializer.save(reference=reference, status="failed")
             raise ValidationError({"detail": msg})
 

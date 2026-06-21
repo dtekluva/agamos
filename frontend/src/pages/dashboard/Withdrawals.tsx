@@ -67,10 +67,12 @@ export default function Withdrawals() {
     e.preventDefault()
     setErr(''); setBusy(true)
     try {
-      await api.post('/withdrawals', { registry: registry.id, amount })
+      const r = await api.post('/withdrawals', { registry: registry.id, amount })
       setAmount('')
       await Promise.all([load(), reload()])
-      toast.success('Withdrawal requested — funds are on the way 🏦')
+      toast.success(r.data?.status === 'queued'
+        ? 'Withdrawal queued — it’ll be sent automatically once your funds settle 🏦'
+        : 'Withdrawal requested — funds are on the way 🏦')
     } catch (e2) {
       setErr(apiError(e2, 'Could not request withdrawal.'))
     } finally { setBusy(false) }
@@ -142,7 +144,10 @@ export default function Withdrawals() {
                 <p className="font-display font-semibold">{money(w.amount, cur)}</p>
                 <p className="text-xs text-muted">{prettyDate(w.requested_at?.slice(0, 10))}</p>
               </div>
-              <span className={`chip ${w.status === 'paid' ? 'bg-success/10 text-success' : w.status === 'failed' ? 'bg-error/10 text-error' : ''}`}>{w.status}</span>
+              <span className={`chip ${w.status === 'paid' ? 'bg-success/10 text-success' : w.status === 'failed' ? 'bg-error/10 text-error' : w.status === 'queued' ? 'bg-warning/15 text-ink' : ''}`}
+                    title={w.status === 'queued' ? 'Will be sent automatically once your funds settle with Paystack' : undefined}>
+                {w.status === 'queued' ? 'queued · awaiting settlement' : w.status}
+              </span>
             </div>
           ))}
         </div>
