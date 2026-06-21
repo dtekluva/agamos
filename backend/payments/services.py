@@ -98,6 +98,29 @@ def verify_transfer(reference):
         return "failed"
     return "processing"  # pending, otp, received, etc.
 
+def resolve_account(account_number, bank_code):
+    """Resolve a NUBAN account number to its account name via Paystack so hosts can
+    confirm their payout account before withdrawing. Raises PaystackError if it
+    can't be resolved (wrong number, or wrong bank for the account)."""
+    if settings.PAYSTACK_MOCK_MODE:
+        return "Test Account"
+    try:
+        resp = requests.get(
+            f"{PAYSTACK}/bank/resolve",
+            params={"account_number": account_number, "bank_code": bank_code},
+            headers=_headers(), timeout=20,
+        )
+        data = resp.json()
+    except requests.RequestException:
+        raise PaystackError("Couldn’t reach the bank verification service. Try again.")
+    if not data.get("status"):
+        raise PaystackError(
+            "We couldn’t verify this account. Check the account number and that "
+            "you’ve selected the correct bank."
+        )
+    return data["data"]["account_name"]
+
+
 def create_transfer_recipient(*, name, account_number, bank_code):
     if settings.PAYSTACK_MOCK_MODE:
         return f"RCP_mock_{secrets.token_hex(4)}"

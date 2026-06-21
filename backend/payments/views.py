@@ -211,6 +211,23 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
         )
 
 
+class ResolveAccountView(APIView):
+    """Confirm a payout account with Paystack (account number + bank code → name)
+    so hosts can verify their bank details before requesting a withdrawal."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        account_number = (request.query_params.get("account_number") or "").strip()
+        bank_code = (request.query_params.get("bank_code") or "").strip()
+        if not (account_number and bank_code):
+            return Response({"detail": "account_number and bank_code are required."}, status=400)
+        try:
+            name = services.resolve_account(account_number, bank_code)
+        except services.PaystackError as e:
+            return Response({"detail": str(e)}, status=400)
+        return Response({"account_name": name})
+
+
 class DashboardView(APIView):
     """Account-level dashboard summary across all the owner's registries."""
     permission_classes = [permissions.IsAuthenticated]

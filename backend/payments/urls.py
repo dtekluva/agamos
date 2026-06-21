@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     ContributionInitView, ContributionVerifyView,
     ContributionListView, ContributionThankView, WithdrawalListCreateView, DashboardView,
+    ResolveAccountView,
 )
 
 urlpatterns = [
@@ -11,5 +12,6 @@ urlpatterns = [
     path("contributions/<int:pk>/thank", ContributionThankView.as_view()),
     path("contributions", ContributionListView.as_view()),
     path("withdrawals", WithdrawalListCreateView.as_view()),
+    path("bank/resolve", ResolveAccountView.as_view()),
     path("dashboard", DashboardView.as_view()),
 ]
