@@ -132,32 +132,30 @@ export default function GiftBuilder() {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {gifts.map((g, i) => (
-            <div key={g.id} className="card p-5">
-              <div className="flex gap-4">
-                <div className="w-16 h-16 rounded-xl bg-soft bg-cover bg-center shrink-0"
-                     style={g.display_image ? { backgroundImage: `url(${g.display_image})` } : {}} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold truncate">{g.title}</h3>
-                    <span className="chip">{g.category}</span>
-                  </div>
-                  <div className="progress mt-2"><i style={{ width: `${g.pct_funded}%` }} /></div>
-                  <div className="flex justify-between text-xs text-muted mt-1">
-                    <span><b className="text-rose-deep">{money(g.amount_raised, registry.currency)}</b> raised</span>
-                    <span>of {money(g.target_amount, registry.currency)}</span>
-                  </div>
+            <div key={g.id} className="card overflow-hidden flex flex-col">
+              <div className="h-36 bg-soft bg-cover bg-center"
+                   style={g.display_image ? { backgroundImage: `url(${g.display_image})` } : { background: 'linear-gradient(135deg, #f3d9c8, #e7b7c9)' }} />
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold truncate">{g.title}</h3>
+                  <span className="chip shrink-0">{g.category}</span>
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <button onClick={() => reorder(i, -1)} disabled={i === 0} title="Move up"
-                          className="w-7 h-7 rounded-lg border border-line text-muted hover:border-rose hover:text-rose-deep disabled:opacity-30 disabled:cursor-not-allowed">↑</button>
-                  <button onClick={() => reorder(i, 1)} disabled={i === gifts.length - 1} title="Move down"
-                          className="w-7 h-7 rounded-lg border border-line text-muted hover:border-rose hover:text-rose-deep disabled:opacity-30 disabled:cursor-not-allowed">↓</button>
+                <div className="progress mt-2"><i style={{ width: `${g.pct_funded}%` }} /></div>
+                <div className="flex justify-between text-xs text-muted mt-1">
+                  <span><b className="text-rose-deep">{money(g.amount_raised, registry.currency)}</b> raised</span>
+                  <span>of {money(g.target_amount, registry.currency)}</span>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => openEdit(g)} className="text-rose-deep font-semibold">Edit</button>
-                  <button onClick={() => archive(g)} className="text-muted hover:text-error">Archive</button>
+                <div className="flex items-center justify-between mt-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => reorder(i, -1)} disabled={i === 0} title="Move up"
+                            className="w-7 h-7 rounded-lg border border-line text-muted hover:border-rose hover:text-rose-deep disabled:opacity-30 disabled:cursor-not-allowed">↑</button>
+                    <button onClick={() => reorder(i, 1)} disabled={i === gifts.length - 1} title="Move down"
+                            className="w-7 h-7 rounded-lg border border-line text-muted hover:border-rose hover:text-rose-deep disabled:opacity-30 disabled:cursor-not-allowed">↓</button>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => openEdit(g)} className="text-rose-deep font-semibold">Edit</button>
+                    <button onClick={() => archive(g)} className="text-muted hover:text-error">Archive</button>
+                  </div>
                 </div>
               </div>
             </div>
