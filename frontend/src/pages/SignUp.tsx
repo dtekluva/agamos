@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 import AuthShell from '../components/AuthShell'
+import PasswordInput from '../components/PasswordInput'
 
 export default function SignUp() {
   const { register } = useAuth()
@@ -50,7 +51,7 @@ export default function SignUp() {
         </div>
         <div>
           <label className="label">Password</label>
-          <input className="input" type="password" autoComplete="new-password" minLength={8}
+          <PasswordInput autoComplete="new-password" minLength={8}
             value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required />
         </div>
         <button className="btn-primary w-full" disabled={busy}>

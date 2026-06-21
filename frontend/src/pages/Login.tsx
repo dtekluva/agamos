@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 import AuthShell from '../components/AuthShell'
+import PasswordInput from '../components/PasswordInput'
 
 export default function Login() {
   const { login } = useAuth()
@@ -38,7 +39,7 @@ export default function Login() {
         {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}
         <div>
           <label className="label">Email</label>
-          <input className="input" type="email" autoComplete="email"
+          <input className="input" type="email" autoComplete="email" placeholder="you@example.com"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div>
@@ -46,7 +47,7 @@ export default function Login() {
             <label className="label">Password</label>
             <Link to="/forgot-password" className="text-xs text-rose-deep font-semibold mb-1.5">Forgot password?</Link>
           </div>
-          <input className="input" type="password" autoComplete="current-password"
+          <PasswordInput autoComplete="current-password" placeholder="Enter your password"
             value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <button className="btn-primary w-full" disabled={busy}>

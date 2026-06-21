@@ -3,6 +3,7 @@ import api from '../../lib/api'
 import { apiError } from '../../lib/errors'
 import { useAuth } from '../../lib/auth'
 import { useToast } from '../../lib/toast'
+import PasswordInput from '../../components/PasswordInput'
 
 export default function Account() {
   const { user, refreshUser } = useAuth()
@@ -68,12 +69,12 @@ export default function Account() {
         <form onSubmit={changePw} className="space-y-4">
           <div>
             <label className="label">Current password</label>
-            <input className="input" type="password" autoComplete="current-password"
+            <PasswordInput autoComplete="current-password" placeholder="Your current password"
               value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required />
           </div>
           <div>
             <label className="label">New password</label>
-            <input className="input" type="password" autoComplete="new-password" minLength={8}
+            <PasswordInput autoComplete="new-password" minLength={8}
               value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} placeholder="At least 8 characters" required />
           </div>
           <div className="flex justify-end">

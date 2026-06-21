@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import api from '../lib/api'
 import { apiError } from '../lib/errors'
 import AuthShell from '../components/AuthShell'
+import PasswordInput from '../components/PasswordInput'
 
 export default function ResetPassword() {
   const [sp] = useSearchParams()
@@ -43,7 +44,7 @@ export default function ResetPassword() {
           {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}
           <div>
             <label className="label">New password</label>
-            <input className="input" type="password" autoComplete="new-password" minLength={8}
+            <PasswordInput autoComplete="new-password" minLength={8}
               value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required />
           </div>
           <button className="btn-primary w-full" disabled={busy}>{busy ? 'Updating…' : 'Update password'}</button>
