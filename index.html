@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agamos — Give what they truly wish for</title>
+<style>
+  :root{
+    --ink:#1f1a24;
+    --rose:#c8688a;
+    --rose-deep:#a84d70;
+    --gold:#d9a86c;
+    --cream:#fbf6f1;
+    --soft:#f3e7df;
+    --muted:#6f6470;
+    --white:#ffffff;
+    --radius:18px;
+    --shadow:0 18px 50px rgba(120,60,90,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--cream);line-height:1.6;
+  }
+  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:600;line-height:1.15}
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* NAV */
+  header{position:sticky;top:0;z-index:50;background:rgba(251,246,241,.85);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--soft)}
+  nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .logo{font-family:Georgia,serif;font-size:26px;font-weight:600;letter-spacing:.5px}
+  .logo span{color:var(--rose)}
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a{color:var(--muted);font-size:15px;transition:color .2s}
+  .nav-links a:hover{color:var(--rose)}
+  .btn{display:inline-block;padding:12px 26px;border-radius:999px;font-weight:600;
+    font-size:15px;transition:transform .15s,box-shadow .2s;cursor:pointer;border:none}
+  .btn-primary{background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;
+    box-shadow:0 10px 24px rgba(168,77,112,.35)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(168,77,112,.45)}
+  /* "Create a registry" nav button: text 30% darker, 50% whiter on hover */
+  .nav-links .btn-primary{color:#b3b3b3}
+  .nav-links .btn-primary:hover{color:#d9d9d9}
+  .btn-ghost{background:transparent;border:1.5px solid var(--rose);color:var(--rose-deep)}
+  .btn-ghost:hover{background:var(--rose);color:#fff}
+  @media(max-width:760px){.nav-links a:not(.btn){display:none}}
+
+  /* HERO */
+  .hero{padding:80px 0 70px;position:relative;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:50px;align-items:center}
+  .eyebrow{display:inline-block;background:var(--soft);color:var(--rose-deep);
+    padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:.4px;
+    text-transform:uppercase;margin-bottom:22px}
+  .hero h1{font-size:54px;margin-bottom:22px}
+  .hero h1 em{color:var(--rose);font-style:italic}
+  .hero p.lead{font-size:19px;color:var(--muted);max-width:520px;margin-bottom:32px}
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+  .hero-trust{margin-top:30px;display:flex;gap:28px;color:var(--muted);font-size:14px}
+  .hero-trust b{color:var(--ink);font-size:22px;font-family:Georgia,serif;display:block}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr}.hero h1{font-size:40px}}
+
+  /* HERO CARD STACK (auto-cycling) */
+  .gift-stack{position:relative;margin:34px 26px 18px 8px;min-height:432px}
+  .gift-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:26px;position:absolute;top:0;left:0;right:0;
+    transition:transform .9s cubic-bezier(.45,.05,.25,1),box-shadow .9s ease}
+  .gift-card:after{content:"";position:absolute;inset:0;border-radius:var(--radius);
+    background:rgba(82,31,51,.07);opacity:0;transition:opacity .9s ease;pointer-events:none}
+  /* default: card-a (Zanzibar) in front, card-b (Paris) peeking behind */
+  .gift-stack .card-a{z-index:3;transform:rotate(-2deg)}
+  .gift-stack .card-b{z-index:1;transform:translate(34px,-30px) rotate(5deg) scale(.965);
+    box-shadow:0 14px 38px rgba(80,40,60,.16)}
+  .gift-stack .card-b:after{opacity:1}
+  /* swapped: card-b in front, card-a peeking behind */
+  .gift-stack.swapped .card-a{z-index:1;transform:translate(34px,-30px) rotate(5deg) scale(.965);
+    box-shadow:0 14px 38px rgba(80,40,60,.16)}
+  .gift-stack.swapped .card-a:after{opacity:1}
+  .gift-stack.swapped .card-b{z-index:3;transform:rotate(-2deg)}
+  .gift-stack.swapped .card-b:after{opacity:0}
+  @media(prefers-reduced-motion:reduce){.gift-card,.gift-card:after{transition:none}}
+  .gift-card .gc-img{height:160px;border-radius:12px;margin-bottom:18px;
+    background:url('assets/zanzibar.jpg') center 60%/cover no-repeat,linear-gradient(135deg,#f3d9c8,#e7b7c9);
+    box-shadow:inset 0 0 0 1px rgba(80,40,60,.06)}
+  .gift-card .gc-img.paris{background:url('assets/paris.jpg') center 35%/cover no-repeat,linear-gradient(135deg,#c9b7e7,#7a6b86)}
+  .gc-title{font-weight:600;font-size:18px;margin-bottom:6px}
+  .gc-sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .progress{height:9px;background:var(--soft);border-radius:999px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:68%;
+    background:linear-gradient(90deg,var(--gold),var(--rose))}
+  .gc-row{display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--muted)}
+  .gc-row b{color:var(--rose-deep)}
+  .gift-card .btn{width:100%;margin-top:16px;text-align:center}
+
+  /* SECTION SHELL */
+  section.block{padding:78px 0}
+  .section-head{text-align:center;max-width:640px;margin:0 auto 52px}
+  .section-head .eyebrow{margin-bottom:16px}
+  .section-head h2{font-size:38px;margin-bottom:14px}
+  .section-head p{color:var(--muted);font-size:17px}
+
+  /* HOW IT WORKS */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .step{background:var(--white);border-radius:var(--radius);padding:32px 26px;
+    box-shadow:0 8px 28px rgba(120,60,90,.07);position:relative}
+  .step .num{width:42px;height:42px;border-radius:50%;
+    background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+    font-family:Georgia,serif;margin-bottom:18px}
+  .step h3{font-size:21px;margin-bottom:10px}
+  .step p{color:var(--muted);font-size:15px}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+
+  /* FEATURES */
+  .features{background:var(--soft)}
+  .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .feature{background:var(--white);border-radius:var(--radius);padding:30px 26px;
+    transition:transform .2s,box-shadow .2s}
+  .feature:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+  .feature .ico{font-size:30px;margin-bottom:14px}
+  .feature h3{font-size:19px;margin-bottom:8px}
+  .feature p{color:var(--muted);font-size:15px}
+  @media(max-width:880px){.feature-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.feature-grid{grid-template-columns:1fr}}
+
+  /* AUDIENCE SPLIT */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .panel{border-radius:var(--radius);padding:40px;color:#fff}
+  .panel.couple{background:linear-gradient(150deg,var(--rose),var(--rose-deep))}
+  .panel.guest{background:linear-gradient(150deg,#7a6b86,#4f4459)}
+  .panel h3{font-size:26px;margin-bottom:18px}
+  .panel ul{list-style:none}
+  .panel li{padding:9px 0 9px 30px;position:relative;font-size:16px;
+    border-bottom:1px solid rgba(255,255,255,.15)}
+  .panel li:before{content:"✓";position:absolute;left:0;font-weight:700;
+    color:rgba(255,255,255,.9)}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+
+  /* CTA */
+  .cta{background:linear-gradient(135deg,#2a2230,#3d3144);color:#fff;text-align:center;
+    border-radius:26px;padding:64px 30px;margin:0 24px}
+  .cta h2{font-size:36px;margin-bottom:14px;color:#fff}
+  .cta p{color:rgba(255,255,255,.78);font-size:18px;max-width:520px;margin:0 auto 30px}
+  .cta .btn-primary{background:linear-gradient(135deg,var(--gold),var(--rose))}
+
+  /* FOOTER */
+  footer{padding:50px 0 36px;color:var(--muted);font-size:14px}
+  .foot-grid{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px}
+  .foot-links{display:flex;gap:24px}
+  .foot-links a:hover{color:var(--rose)}
+
+  /* CREATE-REGISTRY MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:200;display:none;align-items:center;
+    justify-content:center;padding:20px;background:rgba(42,34,47,.55);backdrop-filter:blur(4px)}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--white);border-radius:20px;box-shadow:0 30px 80px rgba(60,30,45,.35);
+    width:100%;max-width:460px;padding:34px 32px;position:relative;
+    animation:modalIn .3s cubic-bezier(.2,.8,.3,1)}
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:26px;
+    line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:8px}
+  .modal-close:hover{color:var(--rose-deep);background:var(--soft)}
+  .modal h2{font-size:27px;color:var(--ink);margin-bottom:8px}
+  .modal .modal-sub{color:var(--muted);font-size:15px;margin-bottom:24px}
+  .field{margin-bottom:16px}
+  .field-row{display:flex;gap:14px}
+  .field-row .field{flex:1}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}
+  .field input{width:100%;padding:12px 14px;border:1.5px solid var(--soft);border-radius:10px;
+    font-size:15px;font-family:inherit;color:var(--ink);background:#fff;
+    transition:border-color .15s,box-shadow .15s}
+  .field input:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(200,104,138,.15)}
+  .field input.invalid{border-color:#d8607a}
+  .field .err{display:none;color:#c0405c;font-size:12px;margin-top:5px}
+  .field input.invalid ~ .err{display:block}
+  .modal .btn-primary{width:100%;text-align:center;margin-top:8px;border:none;cursor:pointer;
+    font-family:inherit;font-size:16px}
+  .modal .fineprint{text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px}
+  .modal-success{text-align:center;display:none}
+  .modal-success .tick{width:64px;height:64px;border-radius:50%;margin:4px auto 18px;
+    background:linear-gradient(135deg,var(--gold),var(--rose));color:#fff;font-size:32px;
+    display:flex;align-items:center;justify-content:center}
+  .modal-success p{color:var(--muted);font-size:15px;margin-bottom:24px}
+  .modal.done .modal-form{display:none}
+  .modal.done .modal-success{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="logo">Agamos<span>.</span></div>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#who">For couples & guests</a>
+        <a href="#start" class="btn btn-primary" data-registry>Create a registry</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Wedding wish lists, reimagined</span>
+      <h1>Give what they <em>truly</em> wish for.</h1>
+      <p class="lead">Agamos lets couples build one shared wedding wish list — and lets
+        friends and well-wishers fund or fully buy each gift. No duplicates. No awkward
+        cash. Just the gifts that matter.</p>
+      <div class="hero-actions">
+        <a href="#start" class="btn btn-primary" data-registry>Start your registry</a>
+        <a href="#how" class="btn btn-ghost">See how it works</a>
+      </div>
+      <div class="hero-trust">
+        <div><b>0 duplicates</b>One shared list</div>
+        <div><b>Group gifts</b>Fund the big stuff together</div>
+        <div><b>Secure</b>Protected payouts</div>
+      </div>
+    </div>
+    <div>
+      <div class="gift-stack" id="giftStack">
+        <!-- card A: Honeymoon in Zanzibar -->
+        <div class="gift-card card-a">
+          <div class="gc-img" role="img" aria-label="Turquoise beach and palm trees in Zanzibar"></div>
+          <div class="gc-title">Honeymoon in Zanzibar</div>
+          <div class="gc-sub">A goal Ada &amp; Tunde are dreaming of</div>
+          <div class="progress"><i></i></div>
+          <div class="gc-row"><span><b>₦680,000</b> raised</span><span>of ₦1,000,000</span></div>
+          <a href="#start" class="btn btn-primary">Contribute a little</a>
+        </div>
+        <!-- card B: Love Nights in Paris -->
+        <div class="gift-card card-b">
+          <div class="gc-img paris" role="img" aria-label="Eiffel Tower lit up at dusk in Paris"></div>
+          <div class="gc-title">Love Nights in Paris</div>
+          <div class="gc-sub">Another goal on Ada &amp; Tunde's list</div>
+          <div class="progress"><i style="width:42%"></i></div>
+          <div class="gc-row"><span><b>₦420,000</b> raised</span><span>of ₦1,000,000</span></div>
+          <a href="#start" class="btn btn-primary">Contribute a little</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="block" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Simple by design</span>
+      <h2>How Agamos works</h2>
+      <p>From "we're engaged" to "thank you" — three easy steps for the couple, one for every guest.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Build your wish list</h3>
+        <p>Add gifts from any store, the Agamos catalog, or set cash goals like a honeymoon or home deposit.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Share your page</h3>
+        <p>Send one beautiful link. Guests browse your story, see what's needed, and pick a gift in seconds.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Receive & redeem</h3>
+        <p>Guests buy outright or chip in toward big goals. Withdraw cash or redeem items — then say thank you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="block features" id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Everything in one place</span>
+      <h2>Built for the way people really give</h2>
+      <p>A wish list, group funding, and cash gifts — with the trust and personal touch other tools miss.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature"><div class="ico">🎁</div><h3>Universal registry</h3>
+        <p>Add any item from any store by link, or pick from a curated catalog. No retailer lock-in.</p></div>
+      <div class="feature"><div class="ico">💸</div><h3>Fund any goal</h3>
+        <p>Mark gifts as full-purchase or open to partial contributions. Honeymoons, homes, charity funds.</p></div>
+      <div class="feature"><div class="ico">👥</div><h3>Group gifting</h3>
+        <p>Several guests can pool together to fund one big item, with a live progress bar.</p></div>
+      <div class="feature"><div class="ico">💌</div><h3>Personal messages</h3>
+        <p>Every gift comes with a heartfelt note — and optional photo — from the giver.</p></div>
+      <div class="feature"><div class="ico">🔒</div><h3>Secure payouts</h3>
+        <p>Funds held safely with verified payouts to the couple's bank. Cards, transfer & mobile money.</p></div>
+      <div class="feature"><div class="ico">✅</div><h3>Guest checkout</h3>
+        <p>Well-wishers give in under a minute — no account needed, even from abroad.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIENCE -->
+<section class="block" id="who">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">For both sides of the gift</span>
+      <h2>Loved by couples and guests alike</h2>
+    </div>
+    <div class="split">
+      <div class="panel couple">
+        <h3>For the couple</h3>
+        <ul>
+          <li>One shared list — zero duplicates</li>
+          <li>Cash funds for honeymoons & homes</li>
+          <li>Track every contribution in real time</li>
+          <li>Withdraw cash or redeem items</li>
+          <li>Built-in thank-you tracking</li>
+        </ul>
+      </div>
+      <div class="panel guest">
+        <h3>For guests & well-wishers</h3>
+        <ul>
+          <li>See exactly what the couple wants</li>
+          <li>Buy outright or chip in any amount</li>
+          <li>Join a group gift in one tap</li>
+          <li>Add a personal message & photo</li>
+          <li>Give securely without an account</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="block" id="start">
+  <div class="cta">
+    <h2>Start your wedding wish list today</h2>
+    <p>It's free to create your registry and share it with everyone you love. Gifts that matter, made simple.</p>
+    <a href="#" class="btn btn-primary" data-registry>Create your registry — free</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="logo">Agamos<span>.</span></div>
+    <div class="foot-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#who">For couples</a>
+      <a href="#start">Get started</a>
+    </div>
+    <div>© 2026 Agamos · Give what they truly wish for.</div>
+  </div>
+</footer>
+
+<!-- CREATE-REGISTRY MODAL -->
+<div class="modal-overlay" id="registryModal" role="dialog" aria-modal="true" aria-labelledby="regTitle">
+  <div class="modal" id="registryCard">
+    <button class="modal-close" type="button" aria-label="Close" data-close>&times;</button>
+    <form class="modal-form" id="registryForm" novalidate>
+      <h2 id="regTitle">Create your registry</h2>
+      <p class="modal-sub">It's free — start your wedding wish list in under a minute.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="p1">Your name</label>
+          <input id="p1" name="p1" type="text" autocomplete="off" placeholder="Ada">
+          <span class="err">Please enter your name</span>
+        </div>
+        <div class="field">
+          <label for="p2">Partner's name</label>
+          <input id="p2" name="p2" type="text" autocomplete="off" placeholder="Tunde">
+          <span class="err">Please enter your partner's name</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="wdate">Wedding date</label>
+        <input id="wdate" name="wdate" type="date">
+        <span class="err">Please choose your wedding date</span>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="off" placeholder="you@example.com">
+        <span class="err">Please enter a valid email address</span>
+      </div>
+      <button type="submit" class="btn btn-primary">Create my registry</button>
+      <p class="fineprint">No payment needed to start.</p>
+    </form>
+    <div class="modal-success" aria-live="polite">
+      <div class="tick">✓</div>
+      <h2 id="successTitle">You're all set!</h2>
+      <p id="successMsg">Your registry is ready to build.</p>
+      <button type="button" class="btn btn-primary" data-close>Start adding gifts</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var stack = document.getElementById('giftStack');
+    if (!stack) return;
+    var cards = stack.querySelectorAll('.gift-card');
+
+    // Size the stack to the tallest card so the absolutely-positioned cards don't collapse.
+    function sizeStack() {
+      var h = 0;
+      cards.forEach(function (c) { h = Math.max(h, c.offsetHeight); });
+      if (h) stack.style.height = h + 'px';
+    }
+    sizeStack();
+    window.addEventListener('resize', sizeStack);
+    window.addEventListener('load', sizeStack);
+
+    // Respect users who prefer reduced motion — leave it static.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Cycle which card sits in front.
+    var timer = setInterval(function () {
+      stack.classList.toggle('swapped');
+    }, 3600);
+
+    // Pause the cycle while hovered so people can read/click the front card.
+    stack.addEventListener('mouseenter', function () { clearInterval(timer); });
+  })();
+
+  // --- Create-registry modal ---
+  (function () {
+    var overlay = document.getElementById('registryModal');
+    if (!overlay) return;
+    var card = document.getElementById('registryCard');
+    var form = document.getElementById('registryForm');
+    var lastFocus = null;
+
+    function open(e) {
+      if (e) e.preventDefault();
+      lastFocus = document.activeElement;
+      card.classList.remove('done');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      var first = form.querySelector('input');
+      if (first) setTimeout(function () { first.focus(); }, 60);
+    }
+    function close() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      form.reset();
+      clearErrors();
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    function clearErrors() {
+      form.querySelectorAll('input').forEach(function (i) { i.classList.remove('invalid'); });
+    }
+
+    document.querySelectorAll('[data-registry]').forEach(function (el) {
+      el.addEventListener('click', open);
+    });
+    overlay.querySelectorAll('[data-close]').forEach(function (b) {
+      b.addEventListener('click', close);
+    });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      clearErrors();
+      var p1 = form.p1, p2 = form.p2, wdate = form.wdate, email = form.email;
+      var ok = true;
+      if (!p1.value.trim()) { p1.classList.add('invalid'); ok = false; }
+      if (!p2.value.trim()) { p2.classList.add('invalid'); ok = false; }
+      if (!wdate.value) { wdate.classList.add('invalid'); ok = false; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { email.classList.add('invalid'); ok = false; }
+      if (!ok) { form.querySelector('input.invalid').focus(); return; }
+
+      var names = p1.value.trim() + ' & ' + p2.value.trim();
+      var d = new Date(wdate.value + 'T00:00:00');
+      var when = isNaN(d.getTime()) ? '' : ' for ' +
+        d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+      document.getElementById('successTitle').textContent = 'You’re all set, ' + names + '!';
+      document.getElementById('successMsg').textContent =
+        'Your wedding registry' + when + ' is ready — next, add the gifts and goals you’re dreaming of.';
+      card.classList.add('done');
+      setTimeout(function () { overlay.querySelector('.modal-success .btn-primary').focus(); }, 60);
+    });
+  })();
+</script>
+
+</body>
+</html>

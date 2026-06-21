@@ -1,0 +1,17 @@
+[Unit]
+Description=Agamos Gunicorn (Django API)
+After=network.target
+
+[Service]
+User=agamos
+Group=www-data
+WorkingDirectory=/opt/agamos/backend
+# Env is loaded from /opt/agamos/backend/.env by python-dotenv at startup.
+ExecStart=/opt/agamos/venv/bin/gunicorn config.wsgi:application -c /opt/agamos/deploy/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

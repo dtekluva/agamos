@@ -1,0 +1,63 @@
+import { FormEvent, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../lib/auth'
+import { useToast } from '../lib/toast'
+import AuthShell from '../components/AuthShell'
+
+export default function SignUp() {
+  const { register } = useAuth()
+  const toast = useToast()
+  const nav = useNavigate()
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    setErr('')
+    setBusy(true)
+    try {
+      await register(email, fullName, password)
+      toast.success('Welcome to Agamos! 🎉')
+      nav('/dashboard')
+    } catch (e: any) {
+      const d = e?.response?.data
+      setErr(d?.email?.[0] || d?.password?.[0] || d?.detail || 'Could not create your account.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthShell
+      title="Create your registry"
+      subtitle="It’s free — start your wedding wish list in under a minute."
+      footer={<>Already have an account? <Link to="/login" className="text-rose-deep font-semibold">Log in</Link></>}
+    >
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}
+        <div>
+          <label className="label">Your name</label>
+          <input className="input" type="text" autoComplete="name"
+            value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ada Okafor" required />
+        </div>
+        <div>
+          <label className="label">Email</label>
+          <input className="input" type="email" autoComplete="email"
+            value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label className="label">Password</label>
+          <input className="input" type="password" autoComplete="new-password" minLength={8}
+            value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required />
+        </div>
+        <button className="btn-primary w-full" disabled={busy}>
+          {busy ? 'Creating…' : 'Create my registry'}
+        </button>
+        <p className="text-xs text-muted text-center">No payment needed to start.</p>
+      </form>
+    </AuthShell>
+  )
+}
