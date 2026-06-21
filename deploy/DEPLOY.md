@@ -12,7 +12,7 @@ Internet ──> nginx (80/443)
 ```
 
 Assumes the repo lives at **`/opt/agamos`** (with `backend/`, `frontend/`, `deploy/`).
-Replace `agamos.example.com` with your domain throughout.
+Domain: **agamos.events** (with `www.` and `app.` subdomains pointing at the droplet).
 
 ---
 
@@ -107,13 +107,13 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Visit `http://agamos.example.com` — the SPA loads; `/admin` and `/api` work.
+Visit `http://agamos.events` — the SPA loads; `/admin` and `/api` work.
 
 ## 6. HTTPS (Let's Encrypt)
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d agamos.example.com -d www.agamos.example.com
+sudo certbot --nginx -d agamos.events -d www.agamos.events
 # certbot adds the 443 server block + HTTP→HTTPS redirect and sets up auto-renewal.
 ```
 
@@ -130,7 +130,7 @@ sudo ufw enable
 In the Paystack dashboard, set the webhook URL to:
 
 ```
-https://agamos.example.com/api/paystack/webhook
+https://agamos.events/api/paystack/webhook
 ```
 
 (The backend verifies the `x-paystack-signature` header against your secret key.)
