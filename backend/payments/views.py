@@ -199,8 +199,17 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
                 reference=reference,
             )
         except services.PaystackError as e:
+            msg = str(e)
+            if "balance is not enough" in msg.lower() or "insufficient" in msg.lower():
+                # Funds simply haven't settled with Paystack yet — a try-again-later
+                # situation, not a real failure, so don't record a failed withdrawal.
+                raise ValidationError({"detail": (
+                    "These funds haven’t settled with Paystack yet. Contributions usually "
+                    "become withdrawable the next business day, after Paystack settles them. "
+                    "Please try again then."
+                )})
             serializer.save(reference=reference, status="failed")
-            raise ValidationError({"detail": str(e)})
+            raise ValidationError({"detail": msg})
 
         paid = result.get("status") == "success"
         serializer.save(

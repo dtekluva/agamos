@@ -122,6 +122,10 @@ export default function Withdrawals() {
                    value={amount} onChange={(e) => setAmount(e.target.value)} required />
             <button className="btn-primary whitespace-nowrap" disabled={busy}>{busy ? 'Requesting…' : 'Withdraw'}</button>
           </div>
+          <p className="text-xs text-muted mt-2">
+            Contributions become withdrawable after Paystack settles them — usually the next
+            business day. A small Paystack fee applies per contribution.
+          </p>
         </form>
       )}
 
