@@ -115,9 +115,28 @@ export default function GiftBuilder() {
             </div>
             <div><label className="label">Category</label><select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></div>
             <div><label className="label">Target amount ({registry.currency})</label><input type="number" min="0" className="input" value={form.target_amount} onChange={(e) => set('target_amount', e.target.value)} required /></div>
-            <div className="flex flex-col justify-end gap-2 text-sm">
-              <label className="flex items-center gap-2"><input type="checkbox" checked={form.allow_partial} onChange={(e) => set('allow_partial', e.target.checked)} /> Allow partial contributions</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={form.is_cash_fund} onChange={(e) => set('is_cash_fund', e.target.checked)} /> This is a cash fund</label>
+            <div className="flex flex-col justify-end gap-3 text-sm sm:col-span-2">
+              <div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={form.allow_partial} disabled={form.is_cash_fund}
+                         onChange={(e) => set('allow_partial', e.target.checked)} />
+                  Allow partial contributions
+                </label>
+                <p className="text-xs text-muted ml-6 mt-0.5">
+                  {form.is_cash_fund
+                    ? 'A cash fund always accepts any amount — this setting doesn’t apply.'
+                    : form.allow_partial
+                      ? 'Guests can chip in any amount toward this gift.'
+                      : 'Guests must fund the full amount in one payment.'}
+                </p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={form.is_cash_fund} onChange={(e) => set('is_cash_fund', e.target.checked)} />
+                  This is a cash fund
+                </label>
+                <p className="text-xs text-muted ml-6 mt-0.5">A flexible money goal — guests give whatever they like.</p>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3">
@@ -138,7 +157,10 @@ export default function GiftBuilder() {
               <div className="p-5 flex flex-col flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold truncate">{g.title}</h3>
-                  <span className="chip shrink-0">{g.category}</span>
+                  <div className="flex gap-1.5 shrink-0">
+                    {!g.allow_partial && !g.is_cash_fund && <span className="chip bg-soft text-muted" title="Guests must fund the full amount">Full amount</span>}
+                    <span className="chip">{g.category}</span>
+                  </div>
                 </div>
                 <div className="progress mt-2"><i style={{ width: `${g.pct_funded}%` }} /></div>
                 <div className="flex justify-between text-xs text-muted mt-1">
