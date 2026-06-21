@@ -140,13 +140,17 @@ export default function GiftBuilder() {
               </div>
               <div>
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={form.show_progress} onChange={(e) => set('show_progress', e.target.checked)} />
+                  <input type="checkbox" checked={form.show_progress}
+                         disabled={!form.allow_partial && !form.is_cash_fund}
+                         onChange={(e) => set('show_progress', e.target.checked)} />
                   Show funding progress
                 </label>
                 <p className="text-xs text-muted ml-6 mt-0.5">
-                  {form.show_progress
-                    ? 'Guests see the progress bar and how much has been raised.'
-                    : 'The progress bar and amounts are hidden from guests.'}
+                  {(!form.allow_partial && !form.is_cash_fund)
+                    ? 'Full-payment gifts show a price, not a progress bar.'
+                    : form.show_progress
+                      ? 'Guests see the progress bar and how much has been raised.'
+                      : 'The progress bar and amounts are hidden from guests.'}
                 </p>
               </div>
             </div>
