@@ -60,7 +60,7 @@ class Registry(models.Model):
     turning_age = models.PositiveIntegerField(null=True, blank=True)  # birthday
     venue = models.CharField(max_length=160, blank=True)
     city = models.CharField(max_length=120, blank=True)
-    cover_image = models.ImageField(upload_to=cover_upload_to, null=True, blank=True)
+    cover_image = models.ImageField(upload_to=cover_upload_to, max_length=255, null=True, blank=True)
     cover_image_url = models.URLField(blank=True)
     hero_message = models.CharField(max_length=240, blank=True)
     our_story = models.TextField(blank=True)
@@ -151,7 +151,7 @@ class StoryMoment(models.Model):
     title = models.CharField(max_length=120)
     date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to=moment_upload_to, null=True, blank=True)
+    image = models.ImageField(upload_to=moment_upload_to, max_length=255, null=True, blank=True)
     image_url = models.URLField(blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 
@@ -184,7 +184,7 @@ class Tribute(models.Model):
 
 class GalleryImage(models.Model):
     registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="gallery")
-    image = models.ImageField(upload_to=gallery_upload_to, null=True, blank=True)
+    image = models.ImageField(upload_to=gallery_upload_to, max_length=255, null=True, blank=True)
     image_url = models.URLField(blank=True)
     caption = models.CharField(max_length=160, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
@@ -212,7 +212,7 @@ class GuestUpload(models.Model):
     MEDIA_TYPES = [(IMAGE, "Image"), (VIDEO, "Video")]
 
     registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="guest_uploads")
-    media = models.FileField(upload_to=guest_upload_to, storage=guest_media_storage)
+    media = models.FileField(upload_to=guest_upload_to, storage=guest_media_storage, max_length=255)
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES, default=IMAGE)
     uploader_name = models.CharField(max_length=120, blank=True)
     caption = models.CharField(max_length=200, blank=True)

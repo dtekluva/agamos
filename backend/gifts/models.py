@@ -26,7 +26,7 @@ class Gift(models.Model):
     registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="gifts")
     title = models.CharField(max_length=140)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to=gift_upload_to, null=True, blank=True)
+    image = models.ImageField(upload_to=gift_upload_to, max_length=255, null=True, blank=True)
     image_url = models.URLField(blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
     target_amount = models.DecimalField(max_digits=12, decimal_places=2)
