@@ -6,6 +6,7 @@ import { apiError, normalizeUrl } from '../../lib/errors'
 import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
 import { THEME_LIST } from '../../lib/themes'
+import { BANKS } from '../../lib/banks'
 import EventTypePicker from '../../components/EventTypePicker'
 
 const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR', 'KES', 'GHS']
@@ -200,11 +201,20 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
       {/* Payout */}
       <section className="card p-6 space-y-4">
         <h3 className="font-semibold">Payout bank details</h3>
-        <p className="text-sm text-muted">Where we send the funds you withdraw. (Bank code is the Paystack bank code.)</p>
+        <p className="text-sm text-muted">Where we send the funds you withdraw.</p>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="label">Bank name</label><input className="input" value={form.bank_name} onChange={(e) => set('bank_name', e.target.value)} /></div>
-          <div><label className="label">Bank code</label><input className="input" placeholder="058" value={form.bank_code} onChange={(e) => set('bank_code', e.target.value)} /></div>
-          <div><label className="label">Account number</label><input className="input" value={form.account_number} onChange={(e) => set('account_number', e.target.value)} /></div>
+          <div className="sm:col-span-2">
+            <label className="label">Bank</label>
+            <select className="input" value={form.bank_code}
+              onChange={(e) => {
+                const b = BANKS.find((x) => x.code === e.target.value)
+                setForm((f: any) => ({ ...f, bank_code: e.target.value, bank_name: b?.name || '' }))
+              }}>
+              <option value="">Select your bank…</option>
+              {BANKS.map((b, i) => <option key={`${b.code}-${i}`} value={b.code}>{b.name}</option>)}
+            </select>
+          </div>
+          <div><label className="label">Account number</label><input className="input" value={form.account_number} onChange={(e) => set('account_number', e.target.value)} inputMode="numeric" maxLength={10} /></div>
           <div><label className="label">Account name</label><input className="input" value={form.account_name} onChange={(e) => set('account_name', e.target.value)} /></div>
         </div>
       </section>
