@@ -6,6 +6,7 @@ import { apiError, normalizeUrl } from '../../lib/errors'
 import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
 import { THEME_LIST } from '../../lib/themes'
+import { trackEventCreated } from '../../lib/analytics'
 import BankFields from '../../components/BankFields'
 import EventTypePicker from '../../components/EventTypePicker'
 
@@ -81,6 +82,7 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
     }
     try {
       const saved = isNew ? await create(payload) : await update(payload)
+      if (isNew) trackEventCreated()  // Google Ads "Sign up" conversion
       // Upload the cover file (if chosen) to the now-saved event, then refresh.
       if (coverFile && saved?.id) {
         const fd = new FormData()
