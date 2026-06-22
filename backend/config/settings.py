@@ -155,6 +155,8 @@ if MAILGUN_API_KEY:
 else:
     EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Agamos <no-reply@mg.agamos.events>")
+# Logo shown in email headers (served by nginx from the SPA's public/ dir).
+EMAIL_LOGO_URL = os.getenv("EMAIL_LOGO_URL", FRONTEND_URL.rstrip("/") + "/agamoslogo.png")
 # Where "Contact us" submissions are emailed (also shown on the public Contact page).
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "agamosevents@gmail.com")
 

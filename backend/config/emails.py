@@ -25,9 +25,16 @@ def _wrap(heading, body_html, cta_text=None, cta_url=None):
             "text-decoration:none;padding:12px 26px;border-radius:999px;font-weight:600;"
             f'margin:22px 0;">{cta_text}</a>'
         )
+    logo = getattr(settings, "EMAIL_LOGO_URL", "")
+    brandmark = (
+        f'<img src="{logo}" alt="Agamos" height="30" '
+        'style="display:block;border:0;outline:none;text-decoration:none;margin-bottom:18px;">'
+        if logo else
+        f'<div style="font-size:22px;font-weight:700;color:{BRAND};margin-bottom:18px;">Agamos</div>'
+    )
     return f"""\
 <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#2A222F;">
-  <div style="font-size:22px;font-weight:700;color:{BRAND};margin-bottom:18px;">Agamos</div>
+  {brandmark}
   <h1 style="font-size:20px;margin:0 0 12px;">{heading}</h1>
   <div style="font-size:15px;line-height:1.6;color:#4a4350;">{body_html}</div>
   {button}
