@@ -149,7 +149,7 @@ FRONTEND_DIST = os.getenv("FRONTEND_DIST", str(BASE_DIR.parent / "frontend" / "d
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Agamos <no-reply@agamos.app>")
 # Where "Contact us" submissions are emailed (also shown on the public Contact page).
-CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "getagamos@gmail.com")
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "agamosevents@gmail.com")
 
 # --- Cloudinary (media uploads) ---
 # When credentials are set, ALL ImageField uploads (covers, gifts, gallery, moments) go to

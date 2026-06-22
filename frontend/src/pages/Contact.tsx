@@ -5,7 +5,9 @@ import { apiError } from '../lib/errors'
 import AuthShell from '../components/AuthShell'
 import { usePageTitle } from '../lib/usePageTitle'
 
-const CONTACT_EMAIL = 'getagamos@gmail.com'
+const CONTACT_EMAIL = 'agamosevents@gmail.com'
+const CONTACT_PHONE = '+2348031346306'
+const CONTACT_WHATSAPP = '2348031346306'
 
 export default function Contact() {
   usePageTitle('Contact us — Agamos')
@@ -35,10 +37,17 @@ export default function Contact() {
       subtitle="Questions, feedback, or partnership ideas — we’d love to hear from you."
       footer={<Link to="/" className="font-semibold text-rose-deep">← Back home</Link>}
     >
-      <p className="text-sm text-muted mb-6">
-        Prefer email? Reach us directly at{' '}
-        <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-rose-deep">{CONTACT_EMAIL}</a>.
-      </p>
+      <div className="text-sm text-muted mb-6 space-y-1">
+        <p>
+          Prefer email? Reach us directly at{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-rose-deep">{CONTACT_EMAIL}</a>.
+        </p>
+        <p>
+          Or call / WhatsApp{' '}
+          <a href={`tel:${CONTACT_PHONE}`} className="font-semibold text-rose-deep">{CONTACT_PHONE}</a>
+          {' '}<a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noopener noreferrer" className="text-rose-deep">(chat on WhatsApp)</a>.
+        </p>
+      </div>
 
       {done ? (
         <div className="text-center py-4">
