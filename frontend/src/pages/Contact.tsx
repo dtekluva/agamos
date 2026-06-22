@@ -4,10 +4,7 @@ import api from '../lib/api'
 import { apiError } from '../lib/errors'
 import AuthShell from '../components/AuthShell'
 import { usePageTitle } from '../lib/usePageTitle'
-
-const CONTACT_EMAIL = 'agamosevents@gmail.com'
-const CONTACT_PHONE = '+2348031346306'
-const CONTACT_WHATSAPP = '2348031346306'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_WHATSAPP } from '../lib/contact'
 
 export default function Contact() {
   usePageTitle('Contact us — Agamos')

@@ -68,3 +68,29 @@
   to   { opacity: 1; transform: none; }
 }
 .toast-pop { animation: toastPop .3s cubic-bezier(.2, .8, .3, 1); }
+
+/* Floating contact widget */
+@keyframes contactPanelPop {
+  from { opacity: 0; transform: translateY(12px) scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+.contact-panel { animation: contactPanelPop .2s cubic-bezier(.2, .8, .3, 1); transform-origin: bottom right; }
+
+/* Soft expanding halo to draw the eye to the button without nagging */
+@keyframes contactPulse {
+  0%   { box-shadow: 0 8px 22px rgba(109, 46, 70, .28), 0 0 0 0 rgba(200, 104, 138, .55); }
+  70%  { box-shadow: 0 10px 26px rgba(109, 46, 70, .32), 0 0 0 14px rgba(200, 104, 138, 0); }
+  100% { box-shadow: 0 8px 22px rgba(109, 46, 70, .28), 0 0 0 0 rgba(200, 104, 138, 0); }
+}
+.contact-fab { animation: contactPulse 3s ease-in-out infinite; }
+.contact-fab:hover { animation: none; }
+
+@keyframes contactNudgePop {
+  from { opacity: 0; transform: translateY(6px) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+.contact-nudge { animation: contactNudgePop .25s cubic-bezier(.2, .8, .3, 1); transform-origin: bottom right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-fab, .contact-panel, .contact-nudge { animation: none; }
+}

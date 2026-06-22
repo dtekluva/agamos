@@ -19,6 +19,7 @@ import Withdrawals from './pages/dashboard/Withdrawals'
 import PublicRegistry from './pages/PublicRegistry'
 import ThankYou from './pages/ThankYou'
 import Contact from './pages/Contact'
+import FloatingContact from './components/FloatingContact'
 
 function ComingSoon({ title }: { title: string }) {
   return (
@@ -44,6 +45,7 @@ function NotFound() {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
@@ -78,5 +80,7 @@ export default function App() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <FloatingContact />
+    </>
   )
 }
