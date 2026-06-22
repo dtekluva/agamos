@@ -33,13 +33,14 @@ const XIcon = (
 )
 
 export default function DashboardChrome({
-  nav, switcher, userLabel, publicUrl, onLogout, children,
+  nav, switcher, userLabel, publicUrl, onLogout, banner, children,
 }: {
   nav: NavItem[]
   switcher?: ReactNode
   userLabel?: string
   publicUrl?: string
   onLogout: () => void
+  banner?: ReactNode
   children: ReactNode
 }) {
   const [drawer, setDrawer] = useState(false)
@@ -76,6 +77,8 @@ export default function DashboardChrome({
           </div>
         </div>
       </header>
+
+      {banner}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid md:grid-cols-[220px_1fr] gap-6 md:gap-8">
         {/* Desktop sidebar */}

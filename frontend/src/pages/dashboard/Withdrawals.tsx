@@ -5,14 +5,17 @@ import { money, prettyDate } from '../../lib/format'
 import { apiError } from '../../lib/errors'
 import { useRegistry } from '../../lib/registry'
 import { useToast } from '../../lib/toast'
+import { useAuth } from '../../lib/auth'
 import BankFields from '../../components/BankFields'
 
 const emptyBank = { bank_name: '', bank_code: '', account_number: '', account_name: '' }
 
 export default function Withdrawals() {
   const { registry, reload } = useRegistry()
+  const { user } = useAuth()
   const toast = useToast()
   const [items, setItems] = useState<any[]>([])
+  const [vbusy, setVbusy] = useState(false)
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
@@ -78,7 +81,18 @@ export default function Withdrawals() {
     } finally { setBusy(false) }
   }
 
+  const resendVerify = async () => {
+    setVbusy(true)
+    try {
+      await api.post('/auth/resend-verification')
+      toast.success('Verification email sent — check your inbox.')
+    } catch (e2) {
+      toast.error(apiError(e2, 'Could not send the email. Please try again.'))
+    } finally { setVbusy(false) }
+  }
+
   const showBankForm = !hasBank || bankEditing
+  const verified = !!user?.email_verified
 
   return (
     <div className="max-w-2xl">
@@ -114,8 +128,21 @@ export default function Withdrawals() {
         )}
       </div>
 
+      {/* Email verification gate (soft gate — withdrawals require a verified email) */}
+      {hasBank && !bankEditing && !verified && (
+        <div className="card p-6 mb-6 bg-warning/10 border border-warning/30">
+          <h3 className="font-semibold mb-1">Verify your email to withdraw</h3>
+          <p className="text-sm text-muted mb-3">
+            For your security, withdrawals require a verified email. We sent a link to <b>{user?.email}</b>.
+          </p>
+          <button onClick={resendVerify} disabled={vbusy} className="btn-primary btn-sm">
+            {vbusy ? 'Sending…' : 'Resend verification email'}
+          </button>
+        </div>
+      )}
+
       {/* Withdraw form */}
-      {hasBank && !bankEditing && (
+      {hasBank && !bankEditing && verified && (
         <form onSubmit={request} className="card p-6 mb-6">
           <h3 className="font-semibold mb-3">Request a withdrawal</h3>
           {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2 mb-3">{err}</div>}

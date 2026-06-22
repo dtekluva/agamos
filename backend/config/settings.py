@@ -145,9 +145,16 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # Built SPA dir — used to serve the index.html shell with OG meta for /r/<slug>.
 FRONTEND_DIST = os.getenv("FRONTEND_DIST", str(BASE_DIR.parent / "frontend" / "dist"))
 
-# Email — console backend in dev (reset links print to the server log); SMTP in prod.
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Agamos <no-reply@agamos.app>")
+# Email — Mailgun HTTP API in prod (set MAILGUN_KEY); console backend otherwise
+# (dev: reset/verify links print to the server log).
+MAILGUN_API_KEY = os.getenv("MAILGUN_KEY", "")
+MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.agamos.events")
+MAILGUN_API_BASE = os.getenv("MAILGUN_API_BASE", "https://api.mailgun.net/v3")
+if MAILGUN_API_KEY:
+    EMAIL_BACKEND = "config.email_backend.MailgunEmailBackend"
+else:
+    EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Agamos <no-reply@mg.agamos.events>")
 # Where "Contact us" submissions are emailed (also shown on the public Contact page).
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "agamosevents@gmail.com")
 

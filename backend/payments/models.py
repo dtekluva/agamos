@@ -15,6 +15,7 @@ class Contribution(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=10, choices=STATUS, default="pending")
     thanked = models.BooleanField(default=False)
+    host_notified = models.BooleanField(default=False)  # email-once guard for the host/guest notification
     reference = models.CharField(max_length=80, unique=True)
     paystack_access_code = models.CharField(max_length=120, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,6 +46,7 @@ class Withdrawal(models.Model):
     reference = models.CharField(max_length=80, blank=True)
     paystack_transfer_code = models.CharField(max_length=80, blank=True)
     note = models.CharField(max_length=200, blank=True)
+    notified_status = models.CharField(max_length=12, blank=True)  # last status the host was emailed about
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 

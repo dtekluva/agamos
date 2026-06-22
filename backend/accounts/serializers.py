@@ -19,8 +19,8 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "phone", "date_joined")
-        read_only_fields = ("id", "date_joined")
+        fields = ("id", "email", "full_name", "phone", "email_verified", "date_joined")
+        read_only_fields = ("id", "email_verified", "date_joined")
 
 
 class RegisterSerializer(serializers.ModelSerializer):

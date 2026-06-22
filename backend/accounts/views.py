@@ -15,6 +15,7 @@ from .serializers import (
     RegisterSerializer, UserSerializer, EmailTokenObtainPairSerializer,
     ContactMessageSerializer,
 )
+from config import emails
 
 User = get_user_model()
 
@@ -49,6 +50,7 @@ class RegisterView(generics.CreateAPIView):
         ser = self.get_serializer(data=request.data)
         ser.is_valid(raise_exception=True)
         user = ser.save()
+        emails.send_verification_email(user)  # welcome + verify (soft gate)
         refresh = RefreshToken.for_user(user)
         return Response(
             {
@@ -130,3 +132,35 @@ class PasswordResetConfirmView(APIView):
         user.set_password(password)
         user.save(update_fields=["password"])
         return Response({"detail": "Password updated. You can now log in."})
+
+
+class EmailVerifyView(APIView):
+    """Confirm an email-verification link (uid + token), marking the email verified."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        uidb64 = request.data.get("uid")
+        token = request.data.get("token")
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({"detail": "Invalid verification link."}, status=400)
+        if user.email_verified:
+            return Response({"detail": "Your email is already verified."})
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail": "This verification link is invalid or has expired."}, status=400)
+        user.email_verified = True
+        user.save(update_fields=["email_verified"])
+        return Response({"detail": "Email verified. Thank you!"})
+
+
+class ResendVerificationView(APIView):
+    """Logged-in user asks for a fresh verification email."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if request.user.email_verified:
+            return Response({"detail": "Your email is already verified."})
+        emails.send_verification_email(request.user)
+        return Response({"detail": "Verification email sent. Please check your inbox."})

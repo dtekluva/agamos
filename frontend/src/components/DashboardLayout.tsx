@@ -4,6 +4,7 @@ import { useRegistry } from '../lib/registry'
 import { getEvent } from '../lib/eventTypes'
 import EventSwitcher from './EventSwitcher'
 import DashboardChrome, { NavItem } from './DashboardChrome'
+import VerifyEmailBanner from './VerifyEmailBanner'
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth()
@@ -28,6 +29,7 @@ export default function DashboardLayout() {
       userLabel={user?.full_name || user?.email}
       publicUrl={registry ? `/r/${registry.slug}` : undefined}
       onLogout={logout}
+      banner={<VerifyEmailBanner />}
     >
       <Outlet />
     </DashboardChrome>

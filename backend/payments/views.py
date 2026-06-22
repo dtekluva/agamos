@@ -15,6 +15,7 @@ from .serializers import (
     ContributionInitSerializer, ContributionSerializer, WithdrawalSerializer,
 )
 from . import services
+from config import emails
 
 # How many stale records to reconcile against Paystack per list request (bounds latency).
 _RECONCILE_CAP = 25
@@ -31,6 +32,7 @@ def _reconcile_contributions(qs):
             if amount_kobo:
                 c.amount = Decimal(amount_kobo) / 100
             c.save(update_fields=["status", "paid_at", "amount"])
+            emails.notify_new_contribution(c)
         elif mapped == "failed":
             c.status = "failed"
             c.save(update_fields=["status"])
@@ -50,6 +52,7 @@ def _reconcile_withdrawals(qs):
             if mapped == "paid":
                 w.processed_at = timezone.now()
             w.save(update_fields=["status", "processed_at"])
+            emails.notify_withdrawal(w)
 
 
 def process_queued_withdrawals(qs):
@@ -76,12 +79,14 @@ def process_queued_withdrawals(qs):
                 continue  # still not settled — keep it queued for the next run
             w.status = "failed"
             w.save(update_fields=["status"])
+            emails.notify_withdrawal(w)
             continue
         paid = result.get("status") == "success"
         w.status = "paid" if paid else "processing"
         w.paystack_transfer_code = result.get("transfer_code", "")
         w.processed_at = timezone.now() if paid else None
         w.save(update_fields=["status", "paystack_transfer_code", "processed_at"])
+        emails.notify_withdrawal(w)
 
 
 class ContributionInitView(APIView):
@@ -146,6 +151,7 @@ class ContributionVerifyView(APIView):
                 if amount_kobo:
                     contribution.amount = Decimal(amount_kobo) / 100
                 contribution.save(update_fields=["status", "paid_at", "amount"])
+                emails.notify_new_contribution(contribution)
             elif mapped == "failed":
                 contribution.status = "failed"
                 contribution.save(update_fields=["status"])
@@ -208,6 +214,11 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
         amount = serializer.validated_data["amount"]
         if registry.owner != self.request.user:
             raise PermissionDenied("Not your registry.")
+        if not self.request.user.email_verified:
+            raise ValidationError(
+                {"detail": "Please verify your email before withdrawing. "
+                           "Check your inbox for the verification link, or resend it from your dashboard."}
+            )
         if amount <= 0:
             raise ValidationError({"amount": "Amount must be positive."})
         if amount > registry.available_balance:
@@ -241,18 +252,20 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
             if _is_unsettled(msg):
                 # Funds haven't settled with Paystack yet — queue it and send it
                 # automatically once settlement lands (no failure shown to the host).
-                serializer.save(reference=reference, status="queued")
+                w = serializer.save(reference=reference, status="queued")
+                emails.notify_withdrawal(w)
                 return
             serializer.save(reference=reference, status="failed")
             raise ValidationError({"detail": msg})
 
         paid = result.get("status") == "success"
-        serializer.save(
+        w = serializer.save(
             reference=reference,
             paystack_transfer_code=result.get("transfer_code", ""),
             status="paid" if paid else "processing",
             processed_at=timezone.now() if paid else None,
         )
+        emails.notify_withdrawal(w)
 
 
 class ResolveAccountView(APIView):
