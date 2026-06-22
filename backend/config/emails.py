@@ -188,3 +188,43 @@ def notify_withdrawal(withdrawal):
         withdrawal.save(update_fields=["notified_status"])
     except Exception:
         log.exception("withdrawal notification failed")
+
+
+# --- Appreciation / welcome campaign ----------------------------------------
+
+def send_appreciation_email(user):
+    """Heartfelt thank-you + 'create an event' nudge. Raises on send failure so
+    the cron command only marks a user as emailed once delivery is accepted."""
+    name = (user.full_name or "").split(" ")[0] or "there"
+    cta_url = settings.FRONTEND_URL.rstrip("/") + "/dashboard"
+    heading = "Thank you for being part of Agamos \U0001f49b"
+    body_html = (
+        f"Hi {name},<br><br>"
+        "From the bottom of our hearts — <b>thank you</b>. Agamos exists because of people "
+        "like you who believe the best gifts are the ones truly wished for, and that every "
+        "celebration deserves to be remembered.<br><br>"
+        "A wedding. An anniversary. A baby on the way. A milestone birthday. Honouring "
+        "someone dear. Your moments matter, and we’re so glad to be part of them.<br><br>"
+        "And a gentle reminder: you can create a beautiful event page in just a few "
+        "minutes — for yourself, or for someone you love. Share it with friends and "
+        "family, and let them give what truly counts.<br><br>"
+        "With love and gratitude,<br><b>The Agamos team</b>"
+        "<br><br><span style='font-size:13px;color:#6F6470;'>P.S. You’re receiving this as "
+        "a valued member of Agamos. If you’d rather not get the occasional note from us, "
+        "just reply and we’ll take you off the list.</span>"
+    )
+    text = (
+        f"Hi {name},\n\n"
+        "From the bottom of our hearts - thank you. Agamos exists because of people like "
+        "you who believe the best gifts are the ones truly wished for, and that every "
+        "celebration deserves to be remembered.\n\n"
+        "A wedding. An anniversary. A baby on the way. A milestone birthday. Honouring "
+        "someone dear. Your moments matter, and we're so glad to be part of them.\n\n"
+        "A gentle reminder: you can create a beautiful event page in just a few minutes - "
+        "for yourself, or for someone you love.\nCreate yours: " + cta_url + "\n\n"
+        "With love and gratitude,\nThe Agamos team\n\n"
+        "P.S. If you'd rather not get the occasional note from us, just reply and we'll "
+        "take you off the list."
+    )
+    html = _wrap(heading, body_html, "Create your event", cta_url)
+    return _send(user.email, "A heartfelt thank you from Agamos \U0001f49b", text, html, fail_silently=False)

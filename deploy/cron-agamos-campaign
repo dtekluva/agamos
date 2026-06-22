@@ -1,0 +1,2 @@
+# Agamos appreciation/welcome campaign — emails new users once each (idempotent).
+0 9 * * * agamos cd /opt/agamos/backend && /opt/agamos/venv/bin/python manage.py send_appreciation >> /opt/agamos/campaign-cron.log 2>&1

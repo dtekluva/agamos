@@ -33,6 +33,7 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     email_verified = models.BooleanField(default=False)
+    appreciation_sent = models.BooleanField(default=False)  # one-time welcome/appreciation campaign guard
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
