@@ -139,8 +139,17 @@ export default function PublicRegistry() {
               {reg.moments.map((m, i) => (
                 <div key={m.id} className="sm:grid sm:grid-cols-2 sm:gap-8 items-center">
                   <div className={`${i % 2 ? 'sm:order-2' : ''}`}>
-                    {m.display_image && (
+                    {m.display_image ? (
                       <div className="h-96 bg-soft bg-cover bg-center shadow-card" style={{ ...imgStyle, backgroundImage: `url(${m.display_image})` }} />
+                    ) : (
+                      <div className="h-96 grid place-items-center bg-stone-100 shadow-card" style={imgStyle} aria-hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25"
+                             className="w-14 h-14 text-stone-300">
+                          <rect x="3" y="4" width="18" height="16" rx="2" />
+                          <circle cx="8.5" cy="9.5" r="1.5" />
+                          <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                      </div>
                     )}
                   </div>
                   <div className={`mt-3 sm:mt-0 ${i % 2 ? 'sm:order-1 sm:text-right' : ''}`}>
