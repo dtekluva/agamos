@@ -96,29 +96,19 @@ export default function PublicRegistry() {
       <section className="relative">
         <div className="h-[60vh] min-h-[440px] bg-cover bg-center" style={heroBg}>
           <div className="h-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center text-white">
-            <p className="uppercase tracking-[0.25em] text-sm mb-4" style={{ color: t.heroEyebrow }}>{cfg.heroKicker(reg)}</p>
-            <h1 className="font-display text-5xl sm:text-6xl font-semibold mb-4">{reg.display_name}</h1>
-            {reg.hero_message && <p className="hero-gold-badge text-sm sm:text-base mb-3">{reg.hero_message}</p>}
-            <div className="flex flex-col items-center gap-2.5 mt-4">
-              {reg.event_date && (
-                <span className="hero-badge">
-                  <span className="hero-badge__icon" aria-hidden>📅</span>
-                  {prettyDate(reg.event_date)}
-                </span>
-              )}
-              {reg.city && (
-                <span className="hero-badge">
-                  <span className="hero-badge__icon" aria-hidden>📍</span>
-                  {reg.city}
-                </span>
-              )}
-              {organiserLine && (
-                <span className="hero-badge hero-badge--royal" style={{ ['--royal' as any]: t.heroEyebrow }}>
-                  <span className="hero-badge__icon" aria-hidden>👑</span>
-                  {organiserLine}
-                </span>
-              )}
-            </div>
+            <p className="uppercase tracking-[0.3em] text-xs sm:text-sm font-medium text-white/80 mb-4">{cfg.heroKicker(reg)}</p>
+            <h1 className="font-display text-5xl sm:text-6xl font-semibold">{reg.display_name}</h1>
+            {reg.hero_message && (
+              <p className="mt-3 text-sm sm:text-base font-medium tracking-wide" style={{ color: t.heroEyebrow }}>{reg.hero_message}</p>
+            )}
+            {(reg.event_date || reg.city) && (
+              <p className="mt-5 text-base sm:text-lg text-white/90">
+                {[reg.event_date && prettyDate(reg.event_date), reg.city].filter(Boolean).join('  ·  ')}
+              </p>
+            )}
+            {organiserLine && (
+              <p className="mt-1.5 text-sm text-white/70">{organiserLine}</p>
+            )}
             {reg.show_registry && reg.gifts.length > 0 && (
               <a href="#registry" className="btn-hero-cta mt-9" style={ctaStyle}>
                 {isMemorial ? 'Support the family' : 'See our wish list'} <span aria-hidden>↓</span>
