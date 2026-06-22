@@ -11,6 +11,7 @@ export default function Exhibition() {
   const { registry, reload, loading } = useRegistry()
   const toast = useToast()
   const [moment, setMoment] = useState({ title: '', date: '', description: '', image_url: '' })
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [momentErr, setMomentErr] = useState('')
 
@@ -29,12 +30,24 @@ export default function Exhibition() {
   const addMoment = async (e: FormEvent) => {
     e.preventDefault(); setMomentErr(''); setBusy(true)
     try {
-      await api.post('/moments/', {
-        registry: registry.id, ...moment,
-        date: moment.date || null,
-        image_url: normalizeUrl(moment.image_url),
-      })
+      if (imageFile) {
+        // Multipart upload — send the chosen file as the `image` field.
+        const fd = new FormData()
+        fd.append('registry', String(registry.id))
+        fd.append('title', moment.title)
+        if (moment.date) fd.append('date', moment.date)
+        if (moment.description) fd.append('description', moment.description)
+        fd.append('image', imageFile)
+        await api.post('/moments/', fd)
+      } else {
+        await api.post('/moments/', {
+          registry: registry.id, ...moment,
+          date: moment.date || null,
+          image_url: normalizeUrl(moment.image_url),
+        })
+      }
       setMoment({ title: '', date: '', description: '', image_url: '' })
+      setImageFile(null)
       await reload()
       toast.success('Moment added to your story')
     } catch (err) {
@@ -60,10 +73,16 @@ export default function Exhibition() {
           <ul className="space-y-3 mb-5">
             {registry.moments.map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
-                <div>
-                  {m.date && <p className="text-rose-deep text-xs font-semibold">{prettyDate(m.date)}</p>}
-                  <p className="font-medium">{m.title}</p>
-                  {m.description && <p className="text-sm text-muted line-clamp-1">{m.description}</p>}
+                <div className="flex items-center gap-3 min-w-0">
+                  {m.display_image && (
+                    <div className="w-12 h-12 shrink-0 rounded-lg bg-soft bg-cover bg-center border border-line"
+                         style={{ backgroundImage: `url(${m.display_image})` }} />
+                  )}
+                  <div className="min-w-0">
+                    {m.date && <p className="text-rose-deep text-xs font-semibold">{prettyDate(m.date)}</p>}
+                    <p className="font-medium truncate">{m.title}</p>
+                    {m.description && <p className="text-sm text-muted line-clamp-1">{m.description}</p>}
+                  </div>
                 </div>
                 <button onClick={() => delMoment(m.id)} className="text-muted hover:text-error text-sm">Remove</button>
               </li>
@@ -76,8 +95,21 @@ export default function Exhibition() {
                  onChange={(e) => setMoment({ ...moment, title: e.target.value })} required />
           <input className="input" type="date" value={moment.date}
                  onChange={(e) => setMoment({ ...moment, date: e.target.value })} />
-          <input className="input sm:col-span-2" placeholder="Image URL (optional)" value={moment.image_url}
-                 onChange={(e) => setMoment({ ...moment, image_url: e.target.value })} />
+          <div className="sm:col-span-2">
+            <label className="label">Photo (optional)</label>
+            {(imageFile || moment.image_url) && (
+              <div className="h-28 rounded-xl bg-soft bg-cover bg-center mb-2 border border-line"
+                   style={{ backgroundImage: `url(${imageFile ? URL.createObjectURL(imageFile) : moment.image_url})` }} />
+            )}
+            <label className="flex items-center gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm cursor-pointer hover:border-rose">
+              <span className="btn-ghost btn-sm">Upload image</span>
+              <span className="text-muted truncate">{imageFile ? imageFile.name : 'JPG or PNG from your device'}</span>
+              <input type="file" accept="image/*" className="hidden"
+                     onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+            </label>
+            <input className="input mt-2" placeholder="…or paste an image URL" value={moment.image_url}
+                   onChange={(e) => setMoment({ ...moment, image_url: e.target.value })} disabled={!!imageFile} />
+          </div>
           <textarea className="input sm:col-span-2 min-h-[60px]" placeholder="What happened?" value={moment.description}
                     onChange={(e) => setMoment({ ...moment, description: e.target.value })} />
           <div className="sm:col-span-2 flex justify-end">
