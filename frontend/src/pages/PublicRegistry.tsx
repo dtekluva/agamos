@@ -270,13 +270,18 @@ export default function PublicRegistry() {
                         {g.fully_funded && <span className="chip bg-success/10 text-success">{isMemorial ? 'Goal met ✓' : 'Funded ✓'}</span>}
                       </div>
                       {g.description && <p className="text-sm text-muted mt-1 line-clamp-2">{g.description}</p>}
-                      {/* Keep the bar on every card for a balanced layout; only show
-                          the raised/target amounts for gifts that fund incrementally. */}
-                      <div className="progress mt-3"><i style={barStyle(g.pct_funded)} /></div>
-                      {(g.allow_partial || g.is_cash_fund) && g.show_progress && (
+                      {/* Keep the bar on every card for a balanced layout. Show the
+                          raised/target progress for gifts that fund incrementally;
+                          otherwise just show the target amount (the price). */}
+                      <div className="progress mt-3"><i style={barStyle(((g.allow_partial || g.is_cash_fund) && g.show_progress) ? g.pct_funded : (g.fully_funded ? 100 : 0))} /></div>
+                      {(g.allow_partial || g.is_cash_fund) && g.show_progress ? (
                         <div className="flex justify-between text-sm text-muted mt-1.5">
                           <span><b style={accent}>{money(g.amount_raised, cur)}</b> raised</span>
                           <span>of {money(g.target_amount, cur)}</span>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted mt-1.5">
+                          <b style={accent}>{money(g.target_amount, cur)}</b>
                         </div>
                       )}
                       <div className="mt-4 pt-2">
