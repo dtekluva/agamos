@@ -15,17 +15,17 @@ export default function EventSwitcher() {
   const createNew = () => { setOpen(false); nav('/dashboard/new') }
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 flex-1">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label="Switch event"
-        className="flex items-center gap-2 rounded-xl border border-line bg-white pl-3 pr-2 py-2 text-sm hover:border-rose hover:bg-soft/50 transition max-w-[240px]"
+        className="flex items-center gap-2 rounded-xl border border-line bg-white pl-3 pr-2 py-2 text-sm hover:border-rose hover:bg-soft/50 transition w-full max-w-[240px] min-w-0"
       >
-        <span>{cfg.emoji}</span>
-        <span className="font-medium truncate">{registry.display_name}</span>
+        <span className="shrink-0">{cfg.emoji}</span>
+        <span className="font-medium truncate min-w-0">{registry.display_name}</span>
         {registries.length > 1 && (
-          <span className="text-[11px] font-bold text-rose-deep bg-soft rounded-full min-w-[18px] h-[18px] grid place-items-center px-1">{registries.length}</span>
+          <span className="text-[11px] font-bold text-rose-deep bg-soft rounded-full min-w-[18px] h-[18px] grid place-items-center px-1 shrink-0">{registries.length}</span>
         )}
         <svg className={`w-4 h-4 text-rose-deep shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
              viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2">

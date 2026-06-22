@@ -54,7 +54,7 @@ export default function Contributions() {
           No contributions yet. Share your <Link to="/dashboard/registry" className="text-rose-deep font-semibold">public page</Link> to start receiving gifts.
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-soft text-left text-muted">
               <tr>

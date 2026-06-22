@@ -94,3 +94,12 @@
 @media (prefers-reduced-motion: reduce) {
   .contact-fab, .contact-panel, .contact-nudge { animation: none; }
 }
+
+/* Mobile dashboard drawer */
+@keyframes drawerIn { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes drawerFade { from { opacity: 0; } to { opacity: 1; } }
+.drawer-panel { animation: drawerIn .22s cubic-bezier(.2, .8, .3, 1); }
+.drawer-backdrop { animation: drawerFade .22s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel, .drawer-backdrop { animation: none; }
+}
