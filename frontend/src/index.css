@@ -42,6 +42,15 @@
                 inset 0 0 0 1px color-mix(in srgb, var(--royal, #e7c987) 22%, transparent);
   }
 
+  /* Hero kicker — a royal gold badge for the headline ("We're getting married") */
+  .hero-kicker-badge {
+    @apply inline-flex items-center gap-2 rounded-full font-display font-semibold px-5 py-2;
+    background: linear-gradient(135deg, #EBCFA8 0%, #D9A86C 45%, #B98A2E 100%);
+    color: #4A2E12;
+    border: 1px solid rgba(255, 255, 255, .5);
+    box-shadow: 0 8px 22px rgba(120, 80, 20, .35), inset 0 1px 0 rgba(255, 255, 255, .55);
+  }
+
   /* Hero "See our wish list" CTA — conspicuous but elegant */
   .btn-hero-cta {
     @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-white

@@ -96,7 +96,7 @@ export default function PublicRegistry() {
       <section className="relative">
         <div className="h-[60vh] min-h-[440px] bg-cover bg-center" style={heroBg}>
           <div className="h-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center text-white">
-            <p className="uppercase tracking-[0.25em] text-sm mb-4" style={{ color: t.heroEyebrow }}>{cfg.heroKicker(reg)}</p>
+            <p className="hero-kicker-badge text-sm sm:text-base mb-5">{cfg.heroKicker(reg)}</p>
             <h1 className="font-display text-5xl sm:text-6xl font-semibold mb-4">{reg.display_name}</h1>
             {reg.hero_message && <p className="text-lg text-white/90 max-w-xl mb-3">{reg.hero_message}</p>}
             <div className="flex flex-col items-center gap-2.5 mt-4">
