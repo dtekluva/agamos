@@ -1,4 +1,4 @@
-export type User = { id: number; email: string; full_name: string } | null
+export type User = { id: number; email: string; full_name: string; phone?: string } | null
 
 export interface Gift {
   id: number

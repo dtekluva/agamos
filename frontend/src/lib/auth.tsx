@@ -6,7 +6,7 @@ interface AuthCtx {
   user: User
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, full_name: string, password: string) => Promise<void>
+  register: (email: string, full_name: string, phone: string, password: string) => Promise<void>
   refreshUser: () => Promise<void>
   logout: () => void
 }
@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(r.data.access, r.data.refresh, r.data.user)
   }
 
-  const register = async (email: string, full_name: string, password: string) => {
-    const r = await api.post('/auth/register', { email, full_name, password })
+  const register = async (email: string, full_name: string, phone: string, password: string) => {
+    const r = await api.post('/auth/register', { email, full_name, phone, password })
     persist(r.data.access, r.data.refresh, r.data.user)
   }
 

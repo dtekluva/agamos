@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -17,16 +19,23 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "date_joined")
+        fields = ("id", "email", "full_name", "phone", "date_joined")
         read_only_fields = ("id", "date_joined")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    phone = serializers.CharField(required=True, allow_blank=False, max_length=20)
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "password")
+        fields = ("id", "email", "full_name", "phone", "password")
+
+    def validate_phone(self, value):
+        # Require a plausible phone number (allow +, spaces, dashes; need enough digits).
+        if len(re.sub(r"\D", "", value)) < 7:
+            raise serializers.ValidationError("Enter a valid phone number.")
+        return value.strip()
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)

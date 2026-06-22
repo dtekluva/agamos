@@ -11,6 +11,7 @@ export default function SignUp() {
   const nav = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -20,12 +21,12 @@ export default function SignUp() {
     setErr('')
     setBusy(true)
     try {
-      await register(email, fullName, password)
+      await register(email, fullName, phone, password)
       toast.success('Welcome to Agamos! 🎉')
       nav('/dashboard')
     } catch (e: any) {
       const d = e?.response?.data
-      setErr(d?.email?.[0] || d?.password?.[0] || d?.detail || 'Could not create your account.')
+      setErr(d?.email?.[0] || d?.phone?.[0] || d?.password?.[0] || d?.detail || 'Could not create your account.')
     } finally {
       setBusy(false)
     }
@@ -51,6 +52,11 @@ export default function SignUp() {
           <label className="label">Email</label>
           <input className="input" type="email" autoComplete="email"
             value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label className="label">Phone number</label>
+          <input className="input" type="tel" autoComplete="tel" inputMode="tel"
+            value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 803 134 6306" required />
         </div>
         <div>
           <label className="label">Password</label>
