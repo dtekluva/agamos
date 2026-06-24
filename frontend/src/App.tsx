@@ -1,27 +1,36 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 import Landing from './pages/Landing'
-import Login from './pages/Login'
-import SignUp from './pages/SignUp'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
 import ProtectedRoute from './components/ProtectedRoute'
 import { RegistryProvider } from './lib/registry'
 import DashboardLayout from './components/DashboardLayout'
-import Overview from './pages/dashboard/Overview'
-import RegistrySettings from './pages/dashboard/RegistrySettings'
-import GiftBuilder from './pages/dashboard/GiftBuilder'
-import Exhibition from './pages/dashboard/Exhibition'
-import Gallery from './pages/dashboard/Gallery'
-import GuestUploads from './pages/dashboard/GuestUploads'
-import Account from './pages/dashboard/Account'
-import Contributions from './pages/dashboard/Contributions'
-import Withdrawals from './pages/dashboard/Withdrawals'
-import PublicRegistry from './pages/PublicRegistry'
-import ThankYou from './pages/ThankYou'
-import Contact from './pages/Contact'
-import VerifyEmail from './pages/VerifyEmail'
-import StartEvent from './pages/StartEvent'
 import FloatingContact from './components/FloatingContact'
+
+// Landing + the dashboard shell stay eager (Landing is the main ad entry; the
+// shell avoids a flash between tabs). Everything else is code-split so a visitor
+// landing on "/" doesn't download the whole app up front.
+const Login = lazy(() => import('./pages/Login'))
+const SignUp = lazy(() => import('./pages/SignUp'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Overview = lazy(() => import('./pages/dashboard/Overview'))
+const RegistrySettings = lazy(() => import('./pages/dashboard/RegistrySettings'))
+const GiftBuilder = lazy(() => import('./pages/dashboard/GiftBuilder'))
+const Exhibition = lazy(() => import('./pages/dashboard/Exhibition'))
+const Gallery = lazy(() => import('./pages/dashboard/Gallery'))
+const GuestUploads = lazy(() => import('./pages/dashboard/GuestUploads'))
+const Account = lazy(() => import('./pages/dashboard/Account'))
+const Contributions = lazy(() => import('./pages/dashboard/Contributions'))
+const Withdrawals = lazy(() => import('./pages/dashboard/Withdrawals'))
+const PublicRegistry = lazy(() => import('./pages/PublicRegistry'))
+const ThankYou = lazy(() => import('./pages/ThankYou'))
+const Contact = lazy(() => import('./pages/Contact'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const StartEvent = lazy(() => import('./pages/StartEvent'))
+
+function PageLoader() {
+  return <div className="min-h-screen grid place-items-center text-muted">Loading…</div>
+}
 
 function ComingSoon({ title }: { title: string }) {
   return (
@@ -48,6 +57,7 @@ function NotFound() {
 export default function App() {
   return (
     <>
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
@@ -84,6 +94,7 @@ export default function App() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
     <FloatingContact />
     </>
   )

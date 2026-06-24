@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useRegistry } from '../lib/registry'
@@ -32,7 +33,9 @@ export default function DashboardLayout() {
       onLogout={logout}
       banner={<><GuestBanner /><VerifyEmailBanner /></>}
     >
-      <Outlet />
+      <Suspense fallback={<p className="text-muted">Loading…</p>}>
+        <Outlet />
+      </Suspense>
     </DashboardChrome>
   )
 }
