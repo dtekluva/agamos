@@ -34,6 +34,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True)
     email_verified = models.BooleanField(default=False)
     appreciation_sent = models.BooleanField(default=False)  # one-time welcome/appreciation campaign guard
+    is_claimed = models.BooleanField(default=True)  # False = anonymous guest draft, not yet a real account
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

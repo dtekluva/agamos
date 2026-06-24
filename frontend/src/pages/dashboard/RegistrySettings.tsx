@@ -6,7 +6,7 @@ import { apiError, normalizeUrl } from '../../lib/errors'
 import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
 import { THEME_LIST } from '../../lib/themes'
-import { trackEventCreated } from '../../lib/analytics'
+import { useAuth } from '../../lib/auth'
 import BankFields from '../../components/BankFields'
 import EventTypePicker from '../../components/EventTypePicker'
 
@@ -23,7 +23,8 @@ const EMPTY = {
 }
 
 export default function RegistrySettings({ forceNew = false }: { forceNew?: boolean }) {
-  const { registry, create, update, remove, reload, loading } = useRegistry()
+  const { registry, registries, create, update, remove, reload, loading } = useRegistry()
+  const { user } = useAuth()
   const toast = useToast()
   const nav = useNavigate()
   const [form, setForm] = useState<any>(EMPTY)
@@ -51,6 +52,14 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
     if (forceNew) setForm(EMPTY)
     else if (registry) setForm({ ...EMPTY, ...registry, event_date: registry.event_date || '' })
   }, [registry?.id, forceNew])
+
+  // Guests get one free event — a second one requires creating an account.
+  useEffect(() => {
+    if (forceNew && user && user.is_claimed === false && (registries?.length || 0) >= 1) {
+      toast.success('Create a free account to save your events and add more.')
+      nav('/signup')
+    }
+  }, [forceNew, user?.is_claimed, registries?.length])
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
 
@@ -82,7 +91,6 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
     }
     try {
       const saved = isNew ? await create(payload) : await update(payload)
-      if (isNew) trackEventCreated()  // Google Ads "Sign up" conversion
       // Upload the cover file (if chosen) to the now-saved event, then refresh.
       if (coverFile && saved?.id) {
         const fd = new FormData()

@@ -1,0 +1,2 @@
+# Agamos guest-draft cleanup — removes abandoned unclaimed guests (no contributions) older than 7 days.
+0 3 * * * agamos cd /opt/agamos/backend && /opt/agamos/venv/bin/python manage.py cleanup_guests >> /opt/agamos/guests-cron.log 2>&1

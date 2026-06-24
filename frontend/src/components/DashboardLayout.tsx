@@ -5,6 +5,7 @@ import { getEvent } from '../lib/eventTypes'
 import EventSwitcher from './EventSwitcher'
 import DashboardChrome, { NavItem } from './DashboardChrome'
 import VerifyEmailBanner from './VerifyEmailBanner'
+import GuestBanner from './GuestBanner'
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth()
@@ -29,7 +30,7 @@ export default function DashboardLayout() {
       userLabel={user?.full_name || user?.email}
       publicUrl={registry ? `/r/${registry.slug}` : undefined}
       onLogout={logout}
-      banner={<VerifyEmailBanner />}
+      banner={<><GuestBanner /><VerifyEmailBanner /></>}
     >
       <Outlet />
     </DashboardChrome>

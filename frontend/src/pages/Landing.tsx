@@ -1,9 +1,30 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { EVENT_LIST } from '../lib/eventTypes'
 import { usePageTitle } from '../lib/usePageTitle'
+import { useAuth } from '../lib/auth'
 
 export default function Landing() {
   usePageTitle('Agamos — Gift lists & cash funds for every celebration')
+  const { user, guest } = useAuth()
+  const nav = useNavigate()
+  const [starting, setStarting] = useState(false)
+
+  // No signup wall: start building immediately as a guest, claim later.
+  const startCreating = async () => {
+    if (starting) return
+    if (user) { nav('/dashboard/new'); return }
+    setStarting(true)
+    try {
+      await guest()
+      nav('/dashboard/new')
+    } catch {
+      nav('/signup')  // fall back to normal signup if guest session fails
+    } finally {
+      setStarting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen">
       {/* Nav */}
@@ -16,7 +37,7 @@ export default function Landing() {
             <a href="#events" className="hidden sm:block hover:text-rose">Events</a>
             <a href="#how" className="hidden sm:block hover:text-rose">How it works</a>
             <Link to="/login" className="hidden sm:block hover:text-rose">Log in</Link>
-            <Link to="/signup" className="btn-primary btn-sm">Create an event</Link>
+            <button type="button" onClick={startCreating} disabled={starting} className="btn-primary btn-sm">Create an event</button>
           </div>
         </nav>
       </header>
@@ -34,7 +55,7 @@ export default function Landing() {
             gifts and goals that matter. No duplicates. No awkward cash.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link to="/signup" className="btn-primary">Start your event</Link>
+            <button type="button" onClick={startCreating} disabled={starting} className="btn-primary">Start your event</button>
             <a href="#events" className="btn-ghost">See event types</a>
           </div>
           <div className="flex gap-8 mt-8 text-sm text-muted">
@@ -70,12 +91,12 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {EVENT_LIST.map((ev) => (
-              <Link key={ev.key} to="/signup"
+              <button key={ev.key} type="button" onClick={startCreating} disabled={starting}
                 className="bg-white rounded-2xl p-5 text-center shadow-card hover:-translate-y-1 hover:shadow-lift transition">
                 <div className="w-14 h-14 rounded-2xl bg-soft grid place-items-center text-3xl mx-auto mb-3">{ev.emoji}</div>
                 <h3 className="font-semibold">{ev.label}</h3>
                 <p className="text-xs text-muted mt-1.5 leading-snug">{ev.blurb}</p>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -134,7 +155,7 @@ export default function Landing() {
         <div className="rounded-3xl bg-gradient-to-br from-berry to-berry-deep text-white text-center px-8 py-16">
           <h2 className="text-4xl font-semibold mb-3">Start your event today</h2>
           <p className="text-white/75 max-w-md mx-auto mb-8">It’s free to create your page and share it with everyone you love.</p>
-          <Link to="/signup" className="btn-gold">Create your event — free</Link>
+          <button type="button" onClick={startCreating} disabled={starting} className="btn-gold">Create your event — free</button>
         </div>
       </section>
 

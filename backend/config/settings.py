@@ -118,6 +118,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "guest_upload": "30/hour",
         "contact": "10/hour",
+        "guest_create": "20/hour",
     },
 }
 

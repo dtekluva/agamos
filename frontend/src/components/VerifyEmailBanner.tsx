@@ -11,7 +11,8 @@ export default function VerifyEmailBanner() {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
 
-  if (!user || user.email_verified) return null
+  // Guests see the GuestBanner instead; only claimed-but-unverified users see this.
+  if (!user || user.is_claimed === false || user.email_verified) return null
 
   const resend = async () => {
     setBusy(true)

@@ -30,7 +30,13 @@ class RegistryViewSet(viewsets.ModelViewSet):
         return Registry.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        user = self.request.user
+        # Guests get one free event; creating more requires a real account.
+        if not user.is_claimed and Registry.objects.filter(owner=user).exists():
+            raise PermissionDenied(
+                "Create a free account to save your event and add more."
+            )
+        serializer.save(owner=user)
 
 
 class _RegistryChildViewSet(viewsets.ModelViewSet):

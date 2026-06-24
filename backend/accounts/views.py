@@ -1,3 +1,6 @@
+import re
+import uuid
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
@@ -164,3 +167,71 @@ class ResendVerificationView(APIView):
             return Response({"detail": "Your email is already verified."})
         emails.send_verification_email(request.user)
         return Response({"detail": "Verification email sent. Please check your inbox."})
+
+
+class GuestView(APIView):
+    """Create an anonymous guest account so a visitor can build an event before
+    signing up. Returns a JWT like login. Rate-limited per IP to deter abuse."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "guest_create"
+
+    def post(self, request):
+        user = User.objects.create_user(
+            email=f"guest+{uuid.uuid4().hex}@agamos.local",
+            password=None,            # unusable until claimed
+            is_claimed=False,
+        )
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "user": UserSerializer(user).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=201,
+        )
+
+
+class ClaimView(APIView):
+    """A guest converts their draft into a real account (v1: new emails only —
+    if the email already exists we ask them to log in instead)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.is_claimed:
+            return Response({"detail": "Your account is already set up."}, status=400)
+
+        email = (request.data.get("email") or "").strip().lower()
+        full_name = (request.data.get("full_name") or "").strip()
+        phone = (request.data.get("phone") or "").strip()
+        password = request.data.get("password") or ""
+
+        errors = {}
+        if not email:
+            errors["email"] = ["This field is required."]
+        elif User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+            errors["email"] = ["You already have an account — please log in to continue."]
+        if len(re.sub(r"\D", "", phone)) < 7:
+            errors["phone"] = ["Enter a valid phone number."]
+        if len(password) < 8:
+            errors["password"] = ["Password must be at least 8 characters."]
+        if errors:
+            return Response(errors, status=400)
+
+        user.email = email
+        user.full_name = full_name
+        user.phone = phone
+        user.is_claimed = True
+        user.set_password(password)
+        user.save()
+        emails.send_verification_email(user)  # welcome + verify
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "user": UserSerializer(user).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            }
+        )

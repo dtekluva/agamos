@@ -7,6 +7,8 @@ interface AuthCtx {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, full_name: string, phone: string, password: string) => Promise<void>
+  guest: () => Promise<void>
+  claim: (email: string, full_name: string, phone: string, password: string) => Promise<void>
   refreshUser: () => Promise<void>
   logout: () => void
 }
@@ -43,6 +45,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(r.data.access, r.data.refresh, r.data.user)
   }
 
+  // Anonymous guest session — lets a visitor build an event before signing up.
+  const guest = async () => {
+    const r = await api.post('/auth/guest')
+    persist(r.data.access, r.data.refresh, r.data.user)
+  }
+
+  // Guest converts their draft into a real account (keeps the same event).
+  const claim = async (email: string, full_name: string, phone: string, password: string) => {
+    const r = await api.post('/auth/claim', { email, full_name, phone, password })
+    persist(r.data.access, r.data.refresh, r.data.user)
+  }
+
   const refreshUser = async () => {
     const r = await api.get('/auth/me')
     setUser(r.data)
@@ -55,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Ctx.Provider value={{ user, loading, login, register, refreshUser, logout }}>
+    <Ctx.Provider value={{ user, loading, login, register, guest, claim, refreshUser, logout }}>
       {children}
     </Ctx.Provider>
   )
