@@ -29,8 +29,9 @@ export default function Login() {
     }
   }
 
-  // Already signed in? Skip the form and go straight to the dashboard.
-  if (!loading && user) return <Navigate to="/dashboard" replace />
+  // Already signed in with a real account? Skip the form. Guests (unclaimed)
+  // must still be able to reach the form to log into their existing account.
+  if (!loading && user && user.is_claimed) return <Navigate to="/dashboard" replace />
 
   return (
     <AuthShell
