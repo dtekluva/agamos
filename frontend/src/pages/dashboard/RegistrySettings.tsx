@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useRegistry } from '../../lib/registry'
 import api from '../../lib/api'
 import { apiError, normalizeUrl } from '../../lib/errors'
@@ -27,6 +27,7 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
   const { user } = useAuth()
   const toast = useToast()
   const nav = useNavigate()
+  const location = useLocation()
   const [form, setForm] = useState<any>(EMPTY)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
@@ -49,8 +50,15 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
   }
 
   useEffect(() => {
-    if (forceNew) setForm(EMPTY)
-    else if (registry) setForm({ ...EMPTY, ...registry, event_date: registry.event_date || '' })
+    if (forceNew) {
+      // Preselect the event type chosen on the public /create picker, if any.
+      const preset = (location.state as any)?.eventType
+      setForm(preset
+        ? { ...EMPTY, event_type: preset, theme: getEvent(preset).defaultTheme }
+        : EMPTY)
+    } else if (registry) {
+      setForm({ ...EMPTY, ...registry, event_date: registry.event_date || '' })
+    }
   }, [registry?.id, forceNew])
 
   // Guests get one free event — a second one requires creating an account.

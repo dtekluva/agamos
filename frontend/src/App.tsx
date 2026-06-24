@@ -20,6 +20,7 @@ import PublicRegistry from './pages/PublicRegistry'
 import ThankYou from './pages/ThankYou'
 import Contact from './pages/Contact'
 import VerifyEmail from './pages/VerifyEmail'
+import StartEvent from './pages/StartEvent'
 import FloatingContact from './components/FloatingContact'
 
 function ComingSoon({ title }: { title: string }) {
@@ -57,6 +58,7 @@ export default function App() {
       <Route path="/r/:slug/thank-you" element={<ThankYou />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/create" element={<StartEvent />} />
 
       <Route
         path="/dashboard"

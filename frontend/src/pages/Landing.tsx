@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { EVENT_LIST } from '../lib/eventTypes'
 import { usePageTitle } from '../lib/usePageTitle'
@@ -6,23 +5,13 @@ import { useAuth } from '../lib/auth'
 
 export default function Landing() {
   usePageTitle('Agamos — Gift lists & cash funds for every celebration')
-  const { user, guest } = useAuth()
+  const { user } = useAuth()
   const nav = useNavigate()
-  const [starting, setStarting] = useState(false)
 
-  // No signup wall: start building immediately as a guest, claim later.
-  const startCreating = async () => {
-    if (starting) return
-    if (user) { nav('/dashboard/new'); return }
-    setStarting(true)
-    try {
-      await guest()
-      nav('/dashboard/new')
-    } catch {
-      nav('/signup')  // fall back to normal signup if guest session fails
-    } finally {
-      setStarting(false)
-    }
+  // No signup wall: send to the public picker. The guest account is created
+  // lazily there (only once a type is picked), so idle clicks leave no rows.
+  const startCreating = () => {
+    nav(user ? '/dashboard/new' : '/create')
   }
 
   return (
@@ -37,7 +26,7 @@ export default function Landing() {
             <a href="#events" className="hidden sm:block hover:text-rose">Events</a>
             <a href="#how" className="hidden sm:block hover:text-rose">How it works</a>
             <Link to="/login" className="hidden sm:block hover:text-rose">Log in</Link>
-            <button type="button" onClick={startCreating} disabled={starting} className="btn-primary btn-sm">Create an event</button>
+            <button type="button" onClick={startCreating} className="btn-primary btn-sm">Create an event</button>
           </div>
         </nav>
       </header>
@@ -55,7 +44,7 @@ export default function Landing() {
             gifts and goals that matter. No duplicates. No awkward cash.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button type="button" onClick={startCreating} disabled={starting} className="btn-primary">Start your event</button>
+            <button type="button" onClick={startCreating} className="btn-primary">Start your event</button>
             <a href="#events" className="btn-ghost">See event types</a>
           </div>
           <div className="flex gap-8 mt-8 text-sm text-muted">
@@ -91,7 +80,7 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {EVENT_LIST.map((ev) => (
-              <button key={ev.key} type="button" onClick={startCreating} disabled={starting}
+              <button key={ev.key} type="button" onClick={startCreating}
                 className="bg-white rounded-2xl p-5 text-center shadow-card hover:-translate-y-1 hover:shadow-lift transition">
                 <div className="w-14 h-14 rounded-2xl bg-soft grid place-items-center text-3xl mx-auto mb-3">{ev.emoji}</div>
                 <h3 className="font-semibold">{ev.label}</h3>
@@ -155,7 +144,7 @@ export default function Landing() {
         <div className="rounded-3xl bg-gradient-to-br from-berry to-berry-deep text-white text-center px-8 py-16">
           <h2 className="text-4xl font-semibold mb-3">Start your event today</h2>
           <p className="text-white/75 max-w-md mx-auto mb-8">It’s free to create your page and share it with everyone you love.</p>
-          <button type="button" onClick={startCreating} disabled={starting} className="btn-gold">Create your event — free</button>
+          <button type="button" onClick={startCreating} className="btn-gold">Create your event — free</button>
         </div>
       </section>
 
