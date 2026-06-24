@@ -89,6 +89,9 @@ export default function Exhibition() {
             ))}
           </ul>
         )}
+        {registry.moments.length === 0 && (
+          <p className="text-muted text-sm mb-4">No moments yet — add your first below to start the timeline.</p>
+        )}
         {momentErr && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2 mb-3">{momentErr}</div>}
         <form onSubmit={addMoment} className="grid sm:grid-cols-2 gap-3">
           <input className="input" placeholder="Title (e.g. A special moment)" value={moment.title}
