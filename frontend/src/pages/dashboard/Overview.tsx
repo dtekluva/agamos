@@ -23,11 +23,13 @@ export default function Overview() {
     return (
       <div className="card p-10 text-center">
         <div className="text-5xl mb-4">💍</div>
-        <h2 className="text-2xl font-semibold mb-2">Let’s create your event</h2>
+        <h2 className="text-2xl font-semibold mb-2">Let’s create your first event</h2>
         <p className="text-muted mb-6 max-w-sm mx-auto">
-          Set up your event page, then add the gifts and goals you have in mind.
+          It takes under a minute — pick your celebration, add the gifts or cash goals you have in
+          mind, then share your page with friends and family.
         </p>
-        <Link to="/dashboard/registry" className="btn-primary">Create your event</Link>
+        <Link to="/dashboard/new" className="btn-primary">Create your event</Link>
+        <p className="text-xs text-muted mt-3">Free to set up · no payment needed to start</p>
       </div>
     )
   }

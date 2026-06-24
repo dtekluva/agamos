@@ -22,8 +22,8 @@ export default function SignUp() {
     setBusy(true)
     try {
       await register(email, fullName, phone, password)
-      toast.success('Welcome to Agamos! 🎉')
-      nav('/dashboard')
+      toast.success('Welcome to Agamos! 🎉 Let’s create your first event.')
+      nav('/dashboard/new')  // drop new users straight into event creation (activation)
     } catch (e: any) {
       const d = e?.response?.data
       setErr(d?.email?.[0] || d?.phone?.[0] || d?.password?.[0] || d?.detail || 'Could not create your account.')
