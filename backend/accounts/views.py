@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import generics, permissions
@@ -21,6 +22,59 @@ from .serializers import (
 from config import emails
 
 User = get_user_model()
+
+
+def _magic_link(user, guest_id=None):
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    url = f"{settings.FRONTEND_URL}/magic?uid={uid}&token={token}"
+    if guest_id:
+        url += f"&g={guest_id}"
+    return url
+
+
+class MagicLinkRequestView(APIView):
+    """Passwordless return: email a sign-in link. Always 200 (don't reveal existence)."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "contact"
+
+    def post(self, request):
+        email = (request.data.get("email") or "").strip()
+        if email:
+            user = User.objects.filter(email__iexact=email, is_claimed=True).first()
+            if user:
+                emails.send_magic_link_email(user, _magic_link(user))
+        return Response({"detail": "If that email has an account, we've sent a sign-in link."})
+
+
+class MagicLoginView(APIView):
+    """Consume a sign-in link → JWT. Optionally re-parents a guest draft (g)."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        try:
+            user = User.objects.get(pk=force_str(urlsafe_base64_decode(request.data.get("uid"))))
+        except Exception:
+            return Response({"detail": "This sign-in link is invalid."}, status=400)
+        if not default_token_generator.check_token(user, request.data.get("token")):
+            return Response({"detail": "This sign-in link is invalid or has expired."}, status=400)
+        g = request.data.get("g")
+        if g:
+            from registries.models import Registry
+            guest = User.objects.filter(pk=g, is_claimed=False).first()
+            if guest:
+                Registry.objects.filter(owner=guest).update(owner=user)
+                guest.delete()
+        user.last_login = timezone.now()  # makes the link single-use (invalidates the token)
+        user.save(update_fields=["last_login"])
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "user": UserSerializer(user).data,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        })
+
 
 
 class ContactView(generics.CreateAPIView):
@@ -215,51 +269,43 @@ class ClaimView(APIView):
 
         if not email:
             return Response({"email": ["This field is required."]}, status=400)
-        if not password:
-            return Response({"password": ["This field is required."]}, status=400)
 
         existing = User.objects.filter(email__iexact=email).exclude(pk=guest.pk).first()
         if existing:
-            # Re-parent: only if they prove they own that account (correct password).
-            from django.contrib.auth import authenticate
-            from registries.models import Registry
-            auth_user = authenticate(request, username=email, password=password)
-            if auth_user is None or auth_user.pk != existing.pk:
-                return Response(
-                    {"detail": "An account with that email already exists. "
-                               "Enter its password to log in and bring your event across."},
-                    status=400,
-                )
-            Registry.objects.filter(owner=guest).update(owner=existing)
-            guest.delete()  # remove the now-empty guest placeholder
-            refresh = RefreshToken.for_user(existing)
-            return Response({
-                "user": UserSerializer(existing).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "merged": True,
-            })
+            # With a password, verify + merge now; otherwise email a sign-in link
+            # that re-parents this draft onto the existing account on click.
+            if password:
+                from django.contrib.auth import authenticate
+                from registries.models import Registry
+                auth_user = authenticate(request, username=email, password=password)
+                if auth_user is None or auth_user.pk != existing.pk:
+                    return Response({"detail": "That email has an account. Use its password, or "
+                                    "leave the password blank and we'll email you a sign-in link."}, status=400)
+                Registry.objects.filter(owner=guest).update(owner=existing)
+                guest.delete()
+                refresh = RefreshToken.for_user(existing)
+                return Response({"user": UserSerializer(existing).data, "access": str(refresh.access_token),
+                                 "refresh": str(refresh), "merged": True})
+            emails.send_magic_link_email(existing, _magic_link(existing, guest_id=guest.id))
+            return Response({"magic_sent": True,
+                             "detail": "You already have an account — we've emailed a sign-in link to add this event to it."})
 
-        # New account: upgrade the guest in place.
-        errors = {}
-        if len(re.sub(r"\D", "", phone)) < 7:
-            errors["phone"] = ["Enter a valid phone number."]
-        if len(password) < 8:
-            errors["password"] = ["Password must be at least 8 characters."]
-        if errors:
-            return Response(errors, status=400)
-
+        # New account — name + email is enough; password is optional (passwordless
+        # users return via the magic sign-in link).
+        if phone and len(re.sub(r"\D", "", phone)) < 7:
+            return Response({"phone": ["Enter a valid phone number."]}, status=400)
+        if password and len(password) < 8:
+            return Response({"password": ["Password must be at least 8 characters."]}, status=400)
         guest.email = email
         guest.full_name = full_name
         guest.phone = phone
         guest.is_claimed = True
-        guest.set_password(password)
+        if password:
+            guest.set_password(password)
+        else:
+            guest.set_unusable_password()
         guest.save()
-        emails.send_verification_email(guest)  # welcome + verify
+        emails.send_verification_email(guest)
         refresh = RefreshToken.for_user(guest)
-        return Response({
-            "user": UserSerializer(guest).data,
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "merged": False,
-        })
+        return Response({"user": UserSerializer(guest).data, "access": str(refresh.access_token),
+                         "refresh": str(refresh), "merged": False})

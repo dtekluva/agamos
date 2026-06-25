@@ -6,6 +6,7 @@ from .views import (
     PasswordResetRequestView, PasswordResetConfirmView,
     EmailVerifyView, ResendVerificationView,
     GuestView, ClaimView,
+    MagicLinkRequestView, MagicLoginView,
 )
 
 urlpatterns = [
@@ -20,4 +21,6 @@ urlpatterns = [
     path("resend-verification", ResendVerificationView.as_view()),
     path("guest", GuestView.as_view()),
     path("claim", ClaimView.as_view()),
+    path("magic-link", MagicLinkRequestView.as_view()),
+    path("magic-login", MagicLoginView.as_view()),
 ]

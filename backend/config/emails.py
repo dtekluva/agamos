@@ -67,6 +67,30 @@ def _money(currency, amount):
     return f"{currency} {amount:,.0f}"
 
 
+# --- Passwordless sign-in -----------------------------------------------------
+
+def send_magic_link_email(user, link):
+    """Passwordless sign-in link. Best-effort; returns count sent."""
+    try:
+        if not user.email:
+            return 0
+        name = (user.full_name or "").split(" ")[0] or "there"
+        text = (
+            f"Hi {name},\n\nTap to sign in to Agamos:\n{link}\n\n"
+            "This link signs you in and expires soon. If you didn't request it, ignore this email."
+        )
+        html = _wrap(
+            "Your Agamos sign-in link",
+            f"Hi {name}, tap below to sign in to your Agamos account — no password needed.",
+            "Sign in to Agamos",
+            link,
+        )
+        return _send(user.email, "Your Agamos sign-in link", text, html)
+    except Exception:
+        log.exception("magic link email failed")
+        return 0
+
+
 # --- Email verification (soft gate) -----------------------------------------
 
 def verification_link(user):

@@ -25,6 +25,7 @@ const Withdrawals = lazy(() => import('./pages/dashboard/Withdrawals'))
 const Guests = lazy(() => import('./pages/dashboard/Guests'))
 const Invite = lazy(() => import('./pages/Invite'))
 const CheckIn = lazy(() => import('./pages/CheckIn'))
+const MagicLogin = lazy(() => import('./pages/MagicLogin'))
 const PublicRegistry = lazy(() => import('./pages/PublicRegistry'))
 const ThankYou = lazy(() => import('./pages/ThankYou'))
 const Contact = lazy(() => import('./pages/Contact'))
@@ -74,6 +75,7 @@ export default function App() {
       <Route path="/create" element={<StartEvent />} />
       <Route path="/i/:token" element={<Invite />} />
       <Route path="/checkin/:doorToken" element={<CheckIn />} />
+      <Route path="/magic" element={<MagicLogin />} />
 
       <Route
         path="/dashboard"

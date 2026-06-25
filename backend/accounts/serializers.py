@@ -24,21 +24,23 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
-    phone = serializers.CharField(required=True, allow_blank=False, max_length=20)
+    # Name + email is enough (A1). Password is optional — passwordless users
+    # return via the magic sign-in link.
+    password = serializers.CharField(write_only=True, min_length=8, required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
 
     class Meta:
         model = User
         fields = ("id", "email", "full_name", "phone", "password")
 
     def validate_phone(self, value):
-        # Require a plausible phone number (allow +, spaces, dashes; need enough digits).
-        if len(re.sub(r"\D", "", value)) < 7:
+        if value and len(re.sub(r"\D", "", value)) < 7:
             raise serializers.ValidationError("Enter a valid phone number.")
-        return value.strip()
+        return (value or "").strip()
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        password = validated_data.pop("password", "") or None
+        return User.objects.create_user(password=password, **validated_data)
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):

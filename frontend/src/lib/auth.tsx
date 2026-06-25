@@ -8,7 +8,9 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, full_name: string, phone: string, password: string) => Promise<void>
   guest: () => Promise<void>
-  claim: (email: string, full_name: string, phone: string, password: string) => Promise<{ merged?: boolean }>
+  claim: (email: string, full_name: string, phone: string, password: string) => Promise<{ merged?: boolean; magic_sent?: boolean }>
+  requestMagicLink: (email: string) => Promise<void>
+  magicLogin: (uid: string, token: string, g?: string) => Promise<void>
   refreshUser: () => Promise<void>
   logout: () => void
 }
@@ -54,8 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Guest converts their draft into a real account (keeps the same event).
   const claim = async (email: string, full_name: string, phone: string, password: string) => {
     const r = await api.post('/auth/claim', { email, full_name, phone, password })
+    // A magic-link response means no session yet (they sign in from their email).
+    if (r.data.access) persist(r.data.access, r.data.refresh, r.data.user)
+    return r.data as { merged?: boolean; magic_sent?: boolean }
+  }
+
+  // Passwordless return: request a sign-in link by email.
+  const requestMagicLink = async (email: string) => { await api.post('/auth/magic-link', { email }) }
+
+  // Consume a sign-in link → session (optionally re-parents a guest draft via g).
+  const magicLogin = async (uid: string, token: string, g?: string) => {
+    const r = await api.post('/auth/magic-login', { uid, token, ...(g ? { g } : {}) })
     persist(r.data.access, r.data.refresh, r.data.user)
-    return r.data as { merged?: boolean }
   }
 
   const refreshUser = async () => {
@@ -70,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Ctx.Provider value={{ user, loading, login, register, guest, claim, refreshUser, logout }}>
+    <Ctx.Provider value={{ user, loading, login, register, guest, claim, requestMagicLink, magicLogin, refreshUser, logout }}>
       {children}
     </Ctx.Provider>
   )
