@@ -9,6 +9,7 @@ type Invite = {
   name: string
   rsvp_status: 'pending' | 'yes' | 'no'
   party_size: number
+  code: string
   event: { display_name: string; slug: string; event_date: string | null; city: string; venue: string; published: boolean }
 }
 
@@ -79,10 +80,21 @@ export default function InvitePage() {
             <h2 className="text-xl font-semibold mb-1">
               {done === 'yes' ? `See you there, ${first}! 🎉` : `Thanks for letting us know, ${first}.`}
             </h2>
-            <p className="text-muted text-sm mb-6">
-              {done === 'yes' ? 'Your RSVP is saved. You can still browse the gift list below.' : 'You’ll be missed — but you can still send a gift below.'}
-            </p>
-            <button onClick={() => setDone(null)} className="text-rose-deep text-sm font-semibold mb-4">Change my reply</button>
+            {done === 'yes' ? (
+              <>
+                <p className="text-muted text-sm mb-4">Your RSVP is saved. Here’s your entry pass — show it at the door.</p>
+                <div className="rounded-2xl border border-line bg-soft/30 p-5 mb-3">
+                  <p className="text-xs text-muted">Entry code</p>
+                  <p className="font-mono text-2xl font-bold tracking-[0.25em] text-ink">{data.code}</p>
+                  <img src={`${api.defaults.baseURL}/i/${token}/qr.png`} alt="Your entry QR code"
+                       width={168} height={168} className="mx-auto mt-3 rounded-lg border border-line bg-white" />
+                </div>
+                <p className="text-xs text-muted mb-4">We’ve emailed this pass to you too.</p>
+              </>
+            ) : (
+              <p className="text-muted text-sm mb-6">You’ll be missed — but you can still send a gift below.</p>
+            )}
+            <button onClick={() => setDone(null)} className="text-rose-deep text-sm font-semibold mb-4 block mx-auto">Change my reply</button>
           </div>
         ) : (
           <div>

@@ -228,11 +228,39 @@ class GuestRSVPView(APIView):
             ps = int(request.data.get("party_size", guest.party_size) or 1)
         except (TypeError, ValueError):
             ps = 1
+        was_attending = guest.rsvp_status == "yes"
         guest.rsvp_status = status_in
         guest.party_size = max(1, min(ps, 20))
         guest.rsvp_at = timezone.now()
         guest.save(update_fields=["rsvp_status", "party_size", "rsvp_at"])
+        # On a fresh 'attending', email the guest their entry pass (code + QR).
+        if status_in == "yes" and not was_attending:
+            emails.send_rsvp_confirmation_email(guest)
         return Response(PublicGuestSerializer(guest, context={"request": request}).data)
+
+
+def _qr_png_bytes(data):
+    import io
+    import qrcode
+    img = qrcode.make(data)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+class GuestPassQRView(APIView):
+    """Returns the guest's entry-pass QR as a PNG (encodes their pass URL).
+    Public but unguessable (the token is a 32-char secret)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token):
+        from django.http import HttpResponse, Http404
+        if not EventGuest.objects.filter(token=token).exists():
+            raise Http404
+        pass_url = f"{settings.FRONTEND_URL.rstrip('/')}/i/{token}"
+        resp = HttpResponse(_qr_png_bytes(pass_url), content_type="image/png")
+        resp["Cache-Control"] = "public, max-age=86400"
+        return resp
 
         serializer.save(
             media_type=GuestUpload.VIDEO if is_video else GuestUpload.IMAGE,

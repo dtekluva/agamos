@@ -164,7 +164,7 @@ class PublicGuestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventGuest
-        fields = ("name", "rsvp_status", "party_size", "event")
+        fields = ("name", "rsvp_status", "party_size", "code", "event")
 
     def get_event(self, obj):
         r = obj.registry

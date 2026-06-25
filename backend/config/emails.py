@@ -236,6 +236,42 @@ def send_invite_email(guest):
         return 0
 
 
+def send_rsvp_confirmation_email(guest):
+    """After a guest RSVPs 'yes', send their entry pass — code + QR for the door."""
+    try:
+        if not guest.email:
+            return 0
+        reg = guest.registry
+        host = reg.display_name
+        name = (guest.name or "").split(" ")[0] or "there"
+        base = settings.FRONTEND_URL.rstrip("/")
+        pass_url = f"{base}/i/{guest.token}"
+        qr_url = f"{base}/api/i/{guest.token}/qr.png"
+
+        text = (
+            f"Hi {name},\n\nYou're confirmed for {host} — we can't wait to see you!\n\n"
+            f"Your entry code: {guest.code}\n\n"
+            f"Show this at the door (or open your pass): {pass_url}\n\n— via Agamos"
+        )
+        html = _wrap(
+            "You’re on the list ✅",
+            f"Hi {name}, you’re confirmed for <b>{host}</b> — we can’t wait to see you!"
+            "<br><br>Show this at the door — or open your pass to scan the code:"
+            f"<div style='text-align:center;margin:22px 0;'>"
+            f"<div style='font-size:13px;color:#6F6470;'>Entry code</div>"
+            f"<div style='font-family:monospace;font-size:30px;font-weight:700;letter-spacing:3px;color:#2A222F;'>{guest.code}</div>"
+            f"<img src='{qr_url}' alt='Your entry QR' width='180' height='180' "
+            "style='display:block;margin:14px auto 0;border:1px solid #E7DBD3;border-radius:12px;'>"
+            "</div>",
+            "Open my entry pass",
+            pass_url,
+        )
+        return _send(guest.email, f"You’re confirmed for {host} ✅", text, html)
+    except Exception:
+        log.exception("rsvp confirmation email failed")
+        return 0
+
+
 # --- Appreciation / welcome campaign ----------------------------------------
 
 def send_appreciation_email(user):

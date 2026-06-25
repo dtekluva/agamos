@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from registries.views import (
     RegistryViewSet, PublicRegistryView, StoryMomentViewSet, GalleryImageViewSet,
-    TributeViewSet, GuestUploadViewSet, EventGuestViewSet, GuestRSVPView,
+    TributeViewSet, GuestUploadViewSet, EventGuestViewSet, GuestRSVPView, GuestPassQRView,
 )
 from gifts.views import GiftViewSet
 from accounts.views import ContactView
@@ -23,6 +23,7 @@ urlpatterns = [
     path("contact", ContactView.as_view()),
     path("r/<slug:slug>", PublicRegistryView.as_view()),
     path("i/<str:token>", GuestRSVPView.as_view()),
+    path("i/<str:token>/qr.png", GuestPassQRView.as_view()),
     path("", include("payments.urls")),
     path("", include(router.urls)),
 ]
