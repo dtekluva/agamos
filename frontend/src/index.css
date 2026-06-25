@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@300;400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,13 +7,14 @@
 
 @layer base {
   body { @apply bg-cream text-ink font-sans antialiased; }
-  h1, h2, h3, h4 { @apply font-display; }
+  /* Instrument Serif is a single weight — lean on size, not boldness. */
+  h1, h2, h3, h4 { @apply font-display font-normal tracking-[-0.01em]; }
 }
 
 @layer components {
   .btn { @apply inline-flex items-center justify-center rounded-full font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed; }
   .btn-primary { @apply btn bg-gradient-to-br from-rose to-rose-deep text-white px-6 py-3 shadow-card hover:-translate-y-0.5; }
-  .btn-gold { @apply btn bg-gradient-to-br from-gold-light to-rose text-white px-6 py-3 shadow-card hover:-translate-y-0.5; }
+  .btn-gold { @apply btn bg-gradient-to-br from-gold-light to-gold text-ink px-6 py-3 shadow-card hover:-translate-y-0.5; }
   .btn-ghost { @apply btn border border-rose text-rose-deep px-6 py-3 hover:bg-rose hover:text-white; }
   .btn-sm { @apply px-4 py-2 text-sm; }
   .card { @apply bg-white rounded-2xl shadow-card; }
@@ -21,13 +22,13 @@
   .input { @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-ink outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/20; }
   .label { @apply block text-sm font-semibold text-ink mb-1.5; }
   .progress { @apply h-2 rounded-full bg-soft overflow-hidden; }
-  .progress > i { @apply block h-full bg-gradient-to-r from-gold-light to-rose; }
+  .progress > i { @apply block h-full bg-gradient-to-r from-sage to-gold; }
   .chip { @apply inline-flex items-center gap-1 rounded-full bg-soft px-3 py-1 text-xs font-semibold text-rose-deep; }
 
   /* Hero "See our wish list" CTA — conspicuous but elegant */
   .btn-hero-cta {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-white
-           px-9 py-4 text-base bg-gradient-to-br from-gold-light to-rose transition;
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-ink
+           px-9 py-4 text-base bg-gradient-to-br from-gold-light to-gold transition;
     animation: ctaGlow 2.6s ease-in-out infinite;
   }
   .btn-hero-cta:hover {
