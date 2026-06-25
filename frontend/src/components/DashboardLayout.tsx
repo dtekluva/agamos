@@ -28,7 +28,7 @@ export default function DashboardLayout() {
     <DashboardChrome
       nav={nav}
       switcher={<EventSwitcher />}
-      userLabel={user?.full_name || user?.email}
+      userLabel={user && !user.is_claimed ? 'Guest' : (user?.full_name || user?.email)}
       publicUrl={registry ? `/r/${registry.slug}` : undefined}
       onLogout={logout}
       banner={<><GuestBanner /><VerifyEmailBanner /></>}

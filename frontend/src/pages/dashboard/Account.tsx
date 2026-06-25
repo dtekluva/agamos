@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../lib/api'
 import { apiError } from '../../lib/errors'
 import { useAuth } from '../../lib/auth'
@@ -39,6 +40,23 @@ export default function Account() {
     } catch (e2) {
       setPwErr(apiError(e2, 'Could not change your password.'))
     } finally { setSavingPw(false) }
+  }
+
+  // Guests have no real account yet — prompt them to claim instead of showing
+  // the email + change-password forms (which would be meaningless for them).
+  if (user && !user.is_claimed) {
+    return (
+      <div className="space-y-6 max-w-xl">
+        <h1 className="text-3xl font-semibold">Account settings</h1>
+        <section className="card p-6 text-center">
+          <p className="text-muted mb-5">
+            You’re using a <b>guest account</b>. Create your free account to set a password,
+            manage your profile, and keep your event safe.
+          </p>
+          <Link to="/signup" className="btn-primary">Save my event &amp; create account</Link>
+        </section>
+      </div>
+    )
   }
 
   return (
