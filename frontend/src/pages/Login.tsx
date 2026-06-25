@@ -29,9 +29,9 @@ export default function Login() {
     }
   }
 
-  // Already signed in with a real account? Skip the form. Guests (unclaimed)
-  // must still be able to reach the form to log into their existing account.
-  if (!loading && user && user.is_claimed) return <Navigate to="/dashboard" replace />
+  // Claimed account → dashboard. A guest with a draft must go through the
+  // claim/merge form (raw login would strand their draft), so send them there.
+  if (!loading && user) return <Navigate to={user.is_claimed ? '/dashboard' : '/signup'} replace />
 
   return (
     <AuthShell

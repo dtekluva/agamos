@@ -53,9 +53,11 @@ export default function SignUp() {
     <AuthShell
       title={isClaiming ? 'Save your event' : 'Create your event'}
       subtitle={isClaiming
-        ? 'Create your free account to keep this event and add more.'
+        ? 'New or returning — enter your details to save this event to your account.'
         : 'It’s free — set up your event page in under a minute.'}
-      footer={<>Already have an account? <Link to="/login" className="text-rose-deep font-semibold">Log in</Link></>}
+      footer={isClaiming
+        ? <span className="text-muted">Already have an account? Use that email &amp; password above — we’ll add this event to it.</span>
+        : <>Already have an account? <Link to="/login" className="text-rose-deep font-semibold">Log in</Link></>}
     >
       <form onSubmit={submit} className="space-y-4">
         {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}

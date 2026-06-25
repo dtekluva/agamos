@@ -11,11 +11,11 @@ export default function GuestBanner() {
     <div className="bg-rose/10 border-b border-rose/20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-ink">
-          <b>You’re building as a guest.</b> Sign up to save your event and get back to it anytime.
+          <b>You’re building as a guest.</b> Save it to your account to keep it and come back anytime —
+          new or returning, it’s the same step.
         </p>
         <div className="flex items-center gap-4 text-sm whitespace-nowrap">
           <Link to="/signup" className="btn-primary btn-sm">Save my event</Link>
-          <Link to="/login" className="font-semibold text-rose-deep">Log in</Link>
         </div>
       </div>
     </div>
