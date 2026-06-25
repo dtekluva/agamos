@@ -22,9 +22,11 @@ _RECONCILE_CAP = 25
 
 
 def _mark_guest_contributed(contribution):
-    """If this contribution came from a personalised invite link, flag that guest
-    as having contributed (for the host's guest-list tracking). Never raises."""
+    """If this (successful) contribution came from a personalised invite link, flag
+    that guest as having contributed (for guest-list tracking). Never raises."""
     try:
+        if contribution.status != "success":
+            return
         g = contribution.guest
         if g and not g.contributed_at:
             g.contributed_at = timezone.now()
