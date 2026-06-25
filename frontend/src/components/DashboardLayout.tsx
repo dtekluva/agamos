@@ -20,6 +20,7 @@ export default function DashboardLayout() {
     { to: '/dashboard/exhibition', label: storyLabel, icon: '💌' },
     { to: '/dashboard/gallery', label: 'Gallery', icon: '📸' },
     { to: '/dashboard/guest-uploads', label: 'Guest uploads', icon: '🤳' },
+    { to: '/dashboard/guests', label: 'Guests & invites', icon: '✉️' },
     { to: '/dashboard/contributions', label: 'Contributions', icon: '💸' },
     { to: '/dashboard/withdrawals', label: 'Withdrawals', icon: '🏦' },
   ]

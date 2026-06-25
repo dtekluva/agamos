@@ -22,6 +22,8 @@ const GuestUploads = lazy(() => import('./pages/dashboard/GuestUploads'))
 const Account = lazy(() => import('./pages/dashboard/Account'))
 const Contributions = lazy(() => import('./pages/dashboard/Contributions'))
 const Withdrawals = lazy(() => import('./pages/dashboard/Withdrawals'))
+const Guests = lazy(() => import('./pages/dashboard/Guests'))
+const Invite = lazy(() => import('./pages/Invite'))
 const PublicRegistry = lazy(() => import('./pages/PublicRegistry'))
 const ThankYou = lazy(() => import('./pages/ThankYou'))
 const Contact = lazy(() => import('./pages/Contact'))
@@ -69,6 +71,7 @@ export default function App() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/create" element={<StartEvent />} />
+      <Route path="/i/:token" element={<Invite />} />
 
       <Route
         path="/dashboard"
@@ -87,6 +90,7 @@ export default function App() {
         <Route path="exhibition" element={<Exhibition />} />
         <Route path="gallery" element={<Gallery />} />
         <Route path="guest-uploads" element={<GuestUploads />} />
+        <Route path="guests" element={<Guests />} />
         <Route path="account" element={<Account />} />
         <Route path="contributions" element={<Contributions />} />
         <Route path="withdrawals" element={<Withdrawals />} />
