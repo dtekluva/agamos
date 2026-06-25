@@ -244,3 +244,44 @@ class GuestUpload(models.Model):
     @property
     def display_media(self):
         return self.media.url if self.media else ""
+
+
+def gen_guest_token():
+    return secrets.token_urlsafe(24)
+
+
+class EventGuest(models.Model):
+    """A person the host is inviting. Carries a unique token (personalised invite
+    link + future door check-in) and a short human code as a fallback."""
+    RSVP = [("pending", "Pending"), ("yes", "Attending"), ("no", "Declined")]
+    # Unambiguous alphabet for the short code (no O/0, I/1, etc.)
+    _CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+    registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="guests")
+    name = models.CharField(max_length=120)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    token = models.CharField(max_length=64, unique=True, default=gen_guest_token, editable=False)
+    code = models.CharField(max_length=12, unique=True, editable=False)
+    rsvp_status = models.CharField(max_length=10, choices=RSVP, default="pending")
+    party_size = models.PositiveSmallIntegerField(default=1)
+    invited_at = models.DateTimeField(null=True, blank=True)
+    viewed_at = models.DateTimeField(null=True, blank=True)
+    rsvp_at = models.DateTimeField(null=True, blank=True)
+    checked_in_at = models.DateTimeField(null=True, blank=True)  # Phase 2 (door check-in)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.registry})"
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            while True:
+                c = "".join(secrets.choice(self._CODE_ALPHABET) for _ in range(6))
+                if not EventGuest.objects.filter(code=c).exists():
+                    self.code = c
+                    break
+        super().save(*args, **kwargs)

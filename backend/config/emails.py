@@ -197,6 +197,45 @@ def notify_withdrawal(withdrawal):
         log.exception("withdrawal notification failed")
 
 
+# --- Guest invitations -------------------------------------------------------
+
+def send_invite_email(guest):
+    """Personalised invitation to a guest, linking to their RSVP + gift-list page.
+    Returns the number sent (0 on failure / no email)."""
+    try:
+        if not guest.email:
+            return 0
+        reg = guest.registry
+        host = reg.display_name
+        name = (guest.name or "").split(" ")[0] or "there"
+        link = f"{settings.FRONTEND_URL}/i/{guest.token}"
+
+        meta = []
+        if reg.wedding_date:
+            meta.append(reg.wedding_date.strftime("%d %B %Y"))
+        if reg.city:
+            meta.append(reg.city)
+        meta_line = " · ".join(meta)
+
+        text = (
+            f"Hi {name},\n\nYou're invited to {host}!\n"
+            + (f"{meta_line}\n" if meta_line else "")
+            + f"\nRSVP and see the gift list here:\n{link}\n\nWith love — via Agamos"
+        )
+        html = _wrap(
+            f"You’re invited to {host} 🎉",
+            f"Hi {name}, you’re warmly invited to <b>{host}</b>."
+            + (f"<br><br>{meta_line}" if meta_line else "")
+            + "<br><br>Tap below to let them know you’re coming and to see the gift list.",
+            "RSVP & view gift list",
+            link,
+        )
+        return _send(guest.email, f"You’re invited to {host} 🎉", text, html)
+    except Exception:
+        log.exception("invite email failed")
+        return 0
+
+
 # --- Appreciation / welcome campaign ----------------------------------------
 
 def send_appreciation_email(user):

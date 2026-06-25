@@ -2,16 +2,21 @@ import hashlib
 import os
 
 from django.conf import settings
+from django.utils import timezone
 from rest_framework import viewsets, generics, permissions
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.views import APIView
 
+from config import emails
 from config.storages import VIDEO_EXTS
-from .models import Registry, StoryMoment, GalleryImage, Tribute, GuestUpload
+from .models import Registry, StoryMoment, GalleryImage, Tribute, GuestUpload, EventGuest
 from .serializers import (
     RegistrySerializer, PublicRegistrySerializer,
     StoryMomentSerializer, GalleryImageSerializer, TributeSerializer,
-    GuestUploadSerializer,
+    GuestUploadSerializer, EventGuestSerializer, PublicGuestSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
 
@@ -161,6 +166,73 @@ class GuestUploadViewSet(viewsets.ModelViewSet):
             mb = cap // (1024 * 1024)
             kind = "Videos" if is_video else "Photos"
             raise ValidationError({"media": f"{kind} must be {mb} MB or smaller."})
+
+
+class EventGuestViewSet(viewsets.ModelViewSet):
+    """Host manages their guest list — add guests, send invites, track RSVPs."""
+    serializer_class = EventGuestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = EventGuest.objects.filter(registry__owner=self.request.user)
+        rid = self.request.query_params.get("registry")
+        if rid:
+            qs = qs.filter(registry_id=rid)
+        return qs
+
+    def perform_create(self, serializer):
+        registry = serializer.validated_data.get("registry")
+        if registry is None or registry.owner != self.request.user:
+            raise PermissionDenied("Not your event.")
+        serializer.save()
+
+    @action(detail=True, methods=["post"])
+    def invite(self, request, pk=None):
+        guest = self.get_object()
+        if not guest.email:
+            raise ValidationError({"detail": "Add an email address before sending an invite."})
+        sent = emails.send_invite_email(guest)
+        if sent:
+            guest.invited_at = timezone.now()
+            guest.save(update_fields=["invited_at"])
+        else:
+            raise ValidationError({"detail": "Could not send the invite. Please try again."})
+        return Response(EventGuestSerializer(guest, context={"request": request}).data)
+
+
+class GuestRSVPView(APIView):
+    """A guest's personalised invite landing (token link) — view the event and
+    RSVP. No login. Viewing marks the guest as 'viewed' for the host's tracking."""
+    permission_classes = [permissions.AllowAny]
+
+    def _get(self, token):
+        return EventGuest.objects.select_related("registry").filter(token=token).first()
+
+    def get(self, request, token):
+        guest = self._get(token)
+        if not guest:
+            return Response({"detail": "Invite not found."}, status=404)
+        if not guest.viewed_at:
+            guest.viewed_at = timezone.now()
+            guest.save(update_fields=["viewed_at"])
+        return Response(PublicGuestSerializer(guest, context={"request": request}).data)
+
+    def post(self, request, token):
+        guest = self._get(token)
+        if not guest:
+            return Response({"detail": "Invite not found."}, status=404)
+        status_in = request.data.get("rsvp_status")
+        if status_in not in ("yes", "no"):
+            return Response({"rsvp_status": ["Choose attending or can't make it."]}, status=400)
+        try:
+            ps = int(request.data.get("party_size", guest.party_size) or 1)
+        except (TypeError, ValueError):
+            ps = 1
+        guest.rsvp_status = status_in
+        guest.party_size = max(1, min(ps, 20))
+        guest.rsvp_at = timezone.now()
+        guest.save(update_fields=["rsvp_status", "party_size", "rsvp_at"])
+        return Response(PublicGuestSerializer(guest, context={"request": request}).data)
 
         serializer.save(
             media_type=GuestUpload.VIDEO if is_video else GuestUpload.IMAGE,

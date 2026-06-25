@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from config.media import abs_media
 from gifts.serializers import GiftSerializer
-from .models import Registry, StoryMoment, GalleryImage, Tribute, GuestUpload
+from .models import Registry, StoryMoment, GalleryImage, Tribute, GuestUpload, EventGuest
 
 
 class StoryMomentSerializer(serializers.ModelSerializer):
@@ -139,3 +139,38 @@ class PublicRegistrySerializer(serializers.ModelSerializer):
         if not obj.show_guest_uploads:
             return []
         return GuestUploadSerializer(obj.guest_uploads.all(), many=True, context=self.context).data
+
+
+class EventGuestSerializer(serializers.ModelSerializer):
+    """Host-facing: manage the guest list."""
+    class Meta:
+        model = EventGuest
+        fields = (
+            "id", "registry", "name", "email", "phone", "code", "token",
+            "rsvp_status", "party_size",
+            "invited_at", "viewed_at", "rsvp_at", "checked_in_at", "created_at",
+        )
+        read_only_fields = (
+            "code", "token", "rsvp_status",
+            "invited_at", "viewed_at", "rsvp_at", "checked_in_at", "created_at",
+        )
+
+
+class PublicGuestSerializer(serializers.ModelSerializer):
+    """Guest-facing (token landing): who they are + the event, for RSVP."""
+    event = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventGuest
+        fields = ("name", "rsvp_status", "party_size", "event")
+
+    def get_event(self, obj):
+        r = obj.registry
+        return {
+            "display_name": r.display_name,
+            "slug": r.slug,
+            "event_date": r.wedding_date,
+            "city": r.city,
+            "venue": r.venue,
+            "published": r.published,
+        }
