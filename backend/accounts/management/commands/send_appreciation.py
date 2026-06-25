@@ -31,7 +31,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         User = get_user_model()
-        qs = User.objects.filter(appreciation_sent=False).exclude(email="").exclude(email__isnull=True)
+        # Only real (claimed) accounts — guests have placeholder @agamos.local emails.
+        qs = User.objects.filter(appreciation_sent=False, is_claimed=True).exclude(email="").exclude(email__isnull=True)
         if not options.get("now"):
             cutoff = timezone.now() - timedelta(hours=MIN_AGE_HOURS)
             qs = qs.filter(date_joined__lte=cutoff)

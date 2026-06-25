@@ -44,10 +44,17 @@ def _wrap(heading, body_html, cta_text=None, cta_url=None):
 </div>"""
 
 
+# Guests have placeholder addresses on this domain — never email them (would bounce).
+PLACEHOLDER_DOMAIN = "@agamos.local"
+
+
 def _send(to, subject, text, html=None, reply_to=None, fail_silently=True):
     if not to:
         return 0
-    recipients = [to] if isinstance(to, str) else list(to)
+    recipients = [r for r in ([to] if isinstance(to, str) else list(to))
+                  if r and not r.lower().endswith(PLACEHOLDER_DOMAIN)]
+    if not recipients:
+        return 0
     msg = EmailMultiAlternatives(
         subject, text, settings.DEFAULT_FROM_EMAIL, recipients, reply_to=reply_to
     )
