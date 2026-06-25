@@ -85,11 +85,11 @@ class RegistrySerializer(serializers.ModelSerializer):
         model = Registry
         fields = _EXHIBITION_FIELDS + (
             "bank_name", "bank_code", "account_number", "account_name",
-            "paystack_recipient_code",
+            "paystack_recipient_code", "checkin_token",
             "total_raised", "total_withdrawn", "available_balance",
             "gifts", "moments", "gallery", "tributes", "guest_uploads", "created_at",
         )
-        read_only_fields = ("slug", "created_at", "paystack_recipient_code")
+        read_only_fields = ("slug", "created_at", "paystack_recipient_code", "checkin_token")
 
 
 class PublicRegistrySerializer(serializers.ModelSerializer):

@@ -8,13 +8,14 @@ import { useToast } from '../../lib/toast'
 type Guest = {
   id: number; name: string; email: string; phone: string; code: string; token: string
   rsvp_status: 'pending' | 'yes' | 'no'; party_size: number
-  invited_at: string | null; viewed_at: string | null; rsvp_at: string | null; contributed_at: string | null
+  invited_at: string | null; viewed_at: string | null; rsvp_at: string | null
+  contributed_at: string | null; checked_in_at: string | null
 }
 
 const EMPTY = { name: '', email: '', phone: '', party_size: 1 }
 
 export default function Guests() {
-  const { registry } = useRegistry()
+  const { registry, reload } = useRegistry()
   const toast = useToast()
   const [guests, setGuests] = useState<Guest[]>([])
   const [form, setForm] = useState<any>(EMPTY)
@@ -22,6 +23,7 @@ export default function Guests() {
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(true)
   const [actingId, setActingId] = useState<number | null>(null)
+  const [regen, setRegen] = useState(false)
 
   const load = () => {
     if (!registry) return
@@ -82,6 +84,21 @@ export default function Guests() {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
+  const doorUrl = (registry as any).checkin_token
+    ? `${window.location.origin}/checkin/${(registry as any).checkin_token}` : ''
+
+  const regenerateDoor = async () => {
+    if (!window.confirm('Generate a new door link? The current one will stop working.')) return
+    setRegen(true)
+    try {
+      await api.post(`/registries/${registry.id}/regenerate-checkin/`)
+      await reload()
+      toast.success('New door link generated — share the new one.')
+    } catch (e2) {
+      toast.error(apiError(e2, 'Could not regenerate the link.'))
+    } finally { setRegen(false) }
+  }
+
   const statusChip = (g: Guest) => {
     if (g.rsvp_status === 'yes') return <span className="chip bg-success/10 text-success">Attending · {g.party_size}</span>
     if (g.rsvp_status === 'no') return <span className="chip bg-error/10 text-error">Declined</span>
@@ -105,6 +122,32 @@ export default function Guests() {
         <div className="card p-5"><p className="text-sm text-muted">Attending</p><p className="text-2xl font-display font-semibold mt-1 text-success">{heads}</p></div>
         <div className="card p-5"><p className="text-sm text-muted">Pending</p><p className="text-2xl font-display font-semibold mt-1">{pending}</p></div>
         <div className="card p-5"><p className="text-sm text-muted">Declined</p><p className="text-2xl font-display font-semibold mt-1 text-muted">{declined}</p></div>
+      </div>
+
+      {/* Door check-in link */}
+      <div className="card p-6 mb-6">
+        <h3 className="font-semibold mb-1">Door check-in</h3>
+        <p className="text-sm text-muted mb-3">
+          Share this private link with whoever’s on the gate — they can scan guests’ QR codes
+          or look them up by code/name. No login needed; don’t post it publicly.
+        </p>
+        {doorUrl ? (
+          <>
+            <div className="flex gap-2 flex-wrap">
+              <input readOnly value={doorUrl} onFocus={(e) => e.currentTarget.select()}
+                className="input flex-1 text-sm min-w-0" />
+              <button type="button" onClick={() => { navigator.clipboard?.writeText(doorUrl); toast.success('Door link copied') }}
+                className="btn-ghost btn-sm">Copy</button>
+              <a href={doorUrl} target="_blank" rel="noreferrer" className="btn-primary btn-sm">Open</a>
+            </div>
+            <button type="button" onClick={regenerateDoor} disabled={regen}
+              className="text-xs text-muted hover:text-error mt-3">
+              {regen ? 'Generating…' : 'Regenerate link (revokes the current one)'}
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-muted">Save your event to get a door link.</p>
+        )}
       </div>
 
       {/* Add guest */}
@@ -136,6 +179,7 @@ export default function Guests() {
                 <p className="text-xs text-muted truncate">{g.email || g.phone || 'no contact'}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">
+                {g.checked_in_at && <span className="chip bg-berry/10 text-berry">Checked in ✓</span>}
                 {statusChip(g)}
                 {g.contributed_at && <span className="chip bg-success/10 text-success">Gave 💝</span>}
                 <button onClick={() => invite(g)} disabled={actingId === g.id || !g.email}

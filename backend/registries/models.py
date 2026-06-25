@@ -28,6 +28,10 @@ def guest_upload_to(instance, filename):
     return f"agamos/{slug}/guests/{filename}"
 
 
+def gen_checkin_token():
+    return secrets.token_urlsafe(18)
+
+
 class Registry(models.Model):
     THEMES = [
         ("blush", "Blush & Gold"),
@@ -49,6 +53,8 @@ class Registry(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                               related_name="registries")
     slug = models.SlugField(max_length=80, unique=True, blank=True)
+    # Secret, regenerable token for the staff door check-in link (no login needed).
+    checkin_token = models.CharField(max_length=64, blank=True, default=gen_checkin_token)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default="wedding")
     # Headline names (labelled contextually per event type in the UI).
     partner_one_name = models.CharField(max_length=80)

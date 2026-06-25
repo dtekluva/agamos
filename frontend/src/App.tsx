@@ -24,6 +24,7 @@ const Contributions = lazy(() => import('./pages/dashboard/Contributions'))
 const Withdrawals = lazy(() => import('./pages/dashboard/Withdrawals'))
 const Guests = lazy(() => import('./pages/dashboard/Guests'))
 const Invite = lazy(() => import('./pages/Invite'))
+const CheckIn = lazy(() => import('./pages/CheckIn'))
 const PublicRegistry = lazy(() => import('./pages/PublicRegistry'))
 const ThankYou = lazy(() => import('./pages/ThankYou'))
 const Contact = lazy(() => import('./pages/Contact'))
@@ -72,6 +73,7 @@ export default function App() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/create" element={<StartEvent />} />
       <Route path="/i/:token" element={<Invite />} />
+      <Route path="/checkin/:doorToken" element={<CheckIn />} />
 
       <Route
         path="/dashboard"

@@ -43,6 +43,14 @@ class RegistryViewSet(viewsets.ModelViewSet):
             )
         serializer.save(owner=user)
 
+    @action(detail=True, methods=["post"], url_path="regenerate-checkin")
+    def regenerate_checkin(self, request, pk=None):
+        from .models import gen_checkin_token
+        reg = self.get_object()
+        reg.checkin_token = gen_checkin_token()
+        reg.save(update_fields=["checkin_token"])
+        return Response({"checkin_token": reg.checkin_token})
+
 
 class _RegistryChildViewSet(viewsets.ModelViewSet):
     """Base for StoryMoment / GalleryImage — scoped to the owner's registries."""
@@ -167,6 +175,11 @@ class GuestUploadViewSet(viewsets.ModelViewSet):
             kind = "Videos" if is_video else "Photos"
             raise ValidationError({"media": f"{kind} must be {mb} MB or smaller."})
 
+        serializer.save(
+            media_type=GuestUpload.VIDEO if is_video else GuestUpload.IMAGE,
+            ip_hash=_hash_ip(self.request),
+        )
+
 
 class EventGuestViewSet(viewsets.ModelViewSet):
     """Host manages their guest list — add guests, send invites, track RSVPs."""
@@ -262,7 +275,82 @@ class GuestPassQRView(APIView):
         resp["Cache-Control"] = "public, max-age=86400"
         return resp
 
-        serializer.save(
-            media_type=GuestUpload.VIDEO if is_video else GuestUpload.IMAGE,
-            ip_hash=_hash_ip(self.request),
-        )
+
+# --- Door check-in (staff, authorised by the event's secret checkin_token) ----
+
+def _checkin_stats(reg):
+    g = reg.guests.all()
+    return {
+        "total": g.count(),
+        "attending": g.filter(rsvp_status="yes").count(),
+        "checked_in": g.exclude(checked_in_at=None).count(),
+    }
+
+
+def _guest_card(g):
+    return {
+        "id": g.id, "name": g.name, "party_size": g.party_size,
+        "rsvp_status": g.rsvp_status, "code": g.code,
+        "checked_in_at": g.checked_in_at,
+    }
+
+
+class _CheckinBase(APIView):
+    """Authorised by the event's secret door token in the URL — never the host's
+    login. Scoped to that one event's guests; can't see funds or edit anything."""
+    permission_classes = [permissions.AllowAny]
+
+    def get_registry(self, door_token):
+        if not door_token:
+            return None
+        return Registry.objects.filter(checkin_token=door_token).first()
+
+
+class CheckinInfoView(_CheckinBase):
+    def get(self, request, door_token):
+        reg = self.get_registry(door_token)
+        if not reg:
+            return Response({"detail": "Invalid check-in link."}, status=404)
+        return Response({"event": reg.display_name, "stats": _checkin_stats(reg)})
+
+
+class CheckinResolveView(_CheckinBase):
+    """Resolve a scanned QR (pass URL or token) or a typed entry code to one guest."""
+    def post(self, request, door_token):
+        reg = self.get_registry(door_token)
+        if not reg:
+            return Response({"detail": "Invalid check-in link."}, status=404)
+        value = (request.data.get("value") or "").strip()
+        if not value:
+            return Response({"detail": "Nothing to look up."}, status=400)
+        tok = value.rstrip("/").split("/")[-1] if "/" in value else value
+        guest = reg.guests.filter(token=tok).first() or reg.guests.filter(code__iexact=value).first()
+        if not guest:
+            return Response({"detail": "Not on this guest list."}, status=404)
+        return Response(_guest_card(guest))
+
+
+class CheckinSearchView(_CheckinBase):
+    def post(self, request, door_token):
+        reg = self.get_registry(door_token)
+        if not reg:
+            return Response({"detail": "Invalid check-in link."}, status=404)
+        q = (request.data.get("q") or "").strip()
+        if len(q) < 2:
+            return Response([])
+        return Response([_guest_card(g) for g in reg.guests.filter(name__icontains=q)[:20]])
+
+
+class CheckinDoView(_CheckinBase):
+    def post(self, request, door_token):
+        reg = self.get_registry(door_token)
+        if not reg:
+            return Response({"detail": "Invalid check-in link."}, status=404)
+        guest = reg.guests.filter(pk=request.data.get("guest_id")).first()
+        if not guest:
+            return Response({"detail": "Not on this guest list."}, status=404)
+        already = guest.checked_in_at is not None
+        if not already:
+            guest.checked_in_at = timezone.now()
+            guest.save(update_fields=["checked_in_at"])
+        return Response({**_guest_card(guest), "already": already, "stats": _checkin_stats(reg)})
