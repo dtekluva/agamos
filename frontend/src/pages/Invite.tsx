@@ -101,7 +101,7 @@ export default function InvitePage() {
         )}
 
         {ev.published && (
-          <Link to={`/r/${ev.slug}`} className="btn-gold w-full mt-2">See the gift list →</Link>
+          <Link to={`/r/${ev.slug}?g=${token}`} className="btn-gold w-full mt-2">See the gift list →</Link>
         )}
       </div>
     </div>

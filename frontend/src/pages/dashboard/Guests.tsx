@@ -8,7 +8,7 @@ import { useToast } from '../../lib/toast'
 type Guest = {
   id: number; name: string; email: string; phone: string; code: string; token: string
   rsvp_status: 'pending' | 'yes' | 'no'; party_size: number
-  invited_at: string | null; viewed_at: string | null; rsvp_at: string | null
+  invited_at: string | null; viewed_at: string | null; rsvp_at: string | null; contributed_at: string | null
 }
 
 const EMPTY = { name: '', email: '', phone: '', party_size: 1 }
@@ -137,6 +137,7 @@ export default function Guests() {
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">
                 {statusChip(g)}
+                {g.contributed_at && <span className="chip bg-success/10 text-success">Gave 💝</span>}
                 <button onClick={() => invite(g)} disabled={actingId === g.id || !g.email}
                   title={g.email ? '' : 'Add an email to send an invite'}
                   className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-rose-deep hover:border-rose hover:bg-soft disabled:opacity-50">

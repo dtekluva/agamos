@@ -21,6 +21,18 @@ from config import emails
 _RECONCILE_CAP = 25
 
 
+def _mark_guest_contributed(contribution):
+    """If this contribution came from a personalised invite link, flag that guest
+    as having contributed (for the host's guest-list tracking). Never raises."""
+    try:
+        g = contribution.guest
+        if g and not g.contributed_at:
+            g.contributed_at = timezone.now()
+            g.save(update_fields=["contributed_at"])
+    except Exception:
+        pass
+
+
 def _reconcile_contributions(qs):
     """Confirm still-pending contributions directly with Paystack (replaces the webhook).
     Catches cases where the guest closed the tab before the verify callback ran."""
@@ -33,6 +45,7 @@ def _reconcile_contributions(qs):
                 c.amount = Decimal(amount_kobo) / 100
             c.save(update_fields=["status", "paid_at", "amount"])
             emails.notify_new_contribution(c)
+            _mark_guest_contributed(c)
         elif mapped == "failed":
             c.status = "failed"
             c.save(update_fields=["status"])
@@ -102,8 +115,16 @@ class ContributionInitView(APIView):
         reference = services.gen_reference()
         email = v.get("guest_email") or "guest@agamos.app"
 
+        # Attribute to an invited guest if they came via a personalised invite link.
+        guest = None
+        tok = (v.get("guest_token") or "").strip()
+        if tok:
+            from registries.models import EventGuest
+            guest = EventGuest.objects.filter(token=tok, registry_id=gift.registry_id).first()
+
         contribution = Contribution.objects.create(
             gift=gift,
+            guest=guest,
             guest_name=v["guest_name"],
             guest_email=v.get("guest_email", ""),
             message=v.get("message", ""),
@@ -152,6 +173,7 @@ class ContributionVerifyView(APIView):
                     contribution.amount = Decimal(amount_kobo) / 100
                 contribution.save(update_fields=["status", "paid_at", "amount"])
                 emails.notify_new_contribution(contribution)
+                _mark_guest_contributed(contribution)
             elif mapped == "failed":
                 contribution.status = "failed"
                 contribution.save(update_fields=["status"])

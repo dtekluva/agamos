@@ -1,5 +1,5 @@
 import { useEffect, useState, CSSProperties } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import api from '../lib/api'
 import { money, prettyDate, wrapWords } from '../lib/format'
 import { getEvent } from '../lib/eventTypes'
@@ -31,6 +31,8 @@ function ViewMoreButton({ open, hidden, onClick, accent }: {
 
 export default function PublicRegistry() {
   const { slug } = useParams()
+  const [searchParams] = useSearchParams()
+  const guestToken = searchParams.get('g') || undefined
   const [reg, setReg] = useState<Registry | null>(null)
   const [err, setErr] = useState(false)
   const [giftToFund, setGiftToFund] = useState<Gift | null>(null)
@@ -324,6 +326,7 @@ export default function PublicRegistry() {
           slug={slug!}
           heading={isMemorial ? 'Make a contribution' : 'Contribute'}
           actionWord={isMemorial ? 'Give' : 'Contribute'}
+          guestToken={guestToken}
           onClose={() => setGiftToFund(null)}
           onSuccess={() => { setGiftToFund(null); load() }}
         />

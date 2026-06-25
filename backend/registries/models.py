@@ -268,6 +268,7 @@ class EventGuest(models.Model):
     invited_at = models.DateTimeField(null=True, blank=True)
     viewed_at = models.DateTimeField(null=True, blank=True)
     rsvp_at = models.DateTimeField(null=True, blank=True)
+    contributed_at = models.DateTimeField(null=True, blank=True)  # first time they funded a gift
     checked_in_at = models.DateTimeField(null=True, blank=True)  # Phase 2 (door check-in)
     created_at = models.DateTimeField(auto_now_add=True)
 

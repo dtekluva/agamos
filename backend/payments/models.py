@@ -8,6 +8,9 @@ class Contribution(models.Model):
     STATUS = [("pending", "Pending"), ("success", "Success"), ("failed", "Failed")]
 
     gift = models.ForeignKey(Gift, on_delete=models.CASCADE, related_name="contributions")
+    # Optional link to an invited guest (from a personalised invite link) — for attribution.
+    guest = models.ForeignKey("registries.EventGuest", null=True, blank=True,
+                              on_delete=models.SET_NULL, related_name="contributions")
     guest_name = models.CharField(max_length=120)
     guest_email = models.EmailField(blank=True)
     message = models.TextField(blank=True)

@@ -150,11 +150,11 @@ class EventGuestSerializer(serializers.ModelSerializer):
         fields = (
             "id", "registry", "name", "email", "phone", "code", "token",
             "rsvp_status", "party_size",
-            "invited_at", "viewed_at", "rsvp_at", "checked_in_at", "created_at",
+            "invited_at", "viewed_at", "rsvp_at", "contributed_at", "checked_in_at", "created_at",
         )
         read_only_fields = (
             "code", "token", "rsvp_status",
-            "invited_at", "viewed_at", "rsvp_at", "checked_in_at", "created_at",
+            "invited_at", "viewed_at", "rsvp_at", "contributed_at", "checked_in_at", "created_at",
         )
 
 

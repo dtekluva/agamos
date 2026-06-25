@@ -10,11 +10,12 @@ interface Props {
   slug: string
   heading?: string
   actionWord?: string
+  guestToken?: string
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function ContributeModal({ gift, currency, heading = 'Contribute', actionWord = 'Contribute', onClose, onSuccess }: Props) {
+export default function ContributeModal({ gift, currency, heading = 'Contribute', actionWord = 'Contribute', guestToken, onClose, onSuccess }: Props) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [amount, setAmount] = useState(gift.allow_partial ? '' : String(gift.remaining || gift.target_amount))
@@ -47,6 +48,7 @@ export default function ContributeModal({ gift, currency, heading = 'Contribute'
         amount,
         message,
         is_anonymous: anon,
+        ...(guestToken ? { guest_token: guestToken } : {}),
       })
       const { reference, public_key, mock, currency: cur } = r.data
 

@@ -13,6 +13,7 @@ class ContributionInitSerializer(serializers.Serializer):
     message = serializers.CharField(required=False, allow_blank=True)
     is_anonymous = serializers.BooleanField(default=False)
     amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("100"))
+    guest_token = serializers.CharField(required=False, allow_blank=True)  # from a personalised invite link
 
     def validate(self, attrs):
         gift = attrs["gift"]
