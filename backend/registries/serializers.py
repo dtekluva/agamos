@@ -143,6 +143,8 @@ class PublicRegistrySerializer(serializers.ModelSerializer):
 
 class EventGuestSerializer(serializers.ModelSerializer):
     """Host-facing: manage the guest list."""
+    party_size = serializers.IntegerField(min_value=1, max_value=20, required=False, default=1)
+
     class Meta:
         model = EventGuest
         fields = (
