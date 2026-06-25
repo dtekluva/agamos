@@ -194,13 +194,18 @@ class GuestView(APIView):
 
 
 class ClaimView(APIView):
-    """A guest converts their draft into a real account (v1: new emails only —
-    if the email already exists we ask them to log in instead)."""
+    """A guest converts their draft into a real account.
+
+    - New email -> upgrade the guest in place (keeps the same event).
+    - Existing email + correct password -> log into that account AND move the
+      guest's draft event(s) onto it (re-parent), then delete the guest.
+    - Existing email + wrong password -> error.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        user = request.user
-        if user.is_claimed:
+        guest = request.user
+        if guest.is_claimed:
             return Response({"detail": "Your account is already set up."}, status=400)
 
         email = (request.data.get("email") or "").strip().lower()
@@ -208,11 +213,35 @@ class ClaimView(APIView):
         phone = (request.data.get("phone") or "").strip()
         password = request.data.get("password") or ""
 
-        errors = {}
         if not email:
-            errors["email"] = ["This field is required."]
-        elif User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
-            errors["email"] = ["You already have an account — please log in to continue."]
+            return Response({"email": ["This field is required."]}, status=400)
+        if not password:
+            return Response({"password": ["This field is required."]}, status=400)
+
+        existing = User.objects.filter(email__iexact=email).exclude(pk=guest.pk).first()
+        if existing:
+            # Re-parent: only if they prove they own that account (correct password).
+            from django.contrib.auth import authenticate
+            from registries.models import Registry
+            auth_user = authenticate(request, username=email, password=password)
+            if auth_user is None or auth_user.pk != existing.pk:
+                return Response(
+                    {"detail": "An account with that email already exists. "
+                               "Enter its password to log in and bring your event across."},
+                    status=400,
+                )
+            Registry.objects.filter(owner=guest).update(owner=existing)
+            guest.delete()  # remove the now-empty guest placeholder
+            refresh = RefreshToken.for_user(existing)
+            return Response({
+                "user": UserSerializer(existing).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "merged": True,
+            })
+
+        # New account: upgrade the guest in place.
+        errors = {}
         if len(re.sub(r"\D", "", phone)) < 7:
             errors["phone"] = ["Enter a valid phone number."]
         if len(password) < 8:
@@ -220,18 +249,17 @@ class ClaimView(APIView):
         if errors:
             return Response(errors, status=400)
 
-        user.email = email
-        user.full_name = full_name
-        user.phone = phone
-        user.is_claimed = True
-        user.set_password(password)
-        user.save()
-        emails.send_verification_email(user)  # welcome + verify
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "user": UserSerializer(user).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            }
-        )
+        guest.email = email
+        guest.full_name = full_name
+        guest.phone = phone
+        guest.is_claimed = True
+        guest.set_password(password)
+        guest.save()
+        emails.send_verification_email(guest)  # welcome + verify
+        refresh = RefreshToken.for_user(guest)
+        return Response({
+            "user": UserSerializer(guest).data,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "merged": False,
+        })

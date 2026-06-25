@@ -26,9 +26,11 @@ export default function SignUp() {
     setBusy(true)
     try {
       if (isClaiming) {
-        await claim(email, fullName, phone, password)
-        trackSignup()  // Google Ads "Sign up" conversion
-        toast.success('Account created — your event is saved! 🎉')
+        const res = await claim(email, fullName, phone, password)
+        if (!res?.merged) trackSignup()  // count only brand-new accounts as conversions
+        toast.success(res?.merged
+          ? 'Welcome back — your event was added to your account! 🎉'
+          : 'Account created — your event is saved! 🎉')
         nav('/dashboard')
       } else {
         await register(email, fullName, phone, password)

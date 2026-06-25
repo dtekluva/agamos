@@ -8,7 +8,7 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, full_name: string, phone: string, password: string) => Promise<void>
   guest: () => Promise<void>
-  claim: (email: string, full_name: string, phone: string, password: string) => Promise<void>
+  claim: (email: string, full_name: string, phone: string, password: string) => Promise<{ merged?: boolean }>
   refreshUser: () => Promise<void>
   logout: () => void
 }
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const claim = async (email: string, full_name: string, phone: string, password: string) => {
     const r = await api.post('/auth/claim', { email, full_name, phone, password })
     persist(r.data.access, r.data.refresh, r.data.user)
+    return r.data as { merged?: boolean }
   }
 
   const refreshUser = async () => {
