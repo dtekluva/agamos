@@ -44,7 +44,8 @@ class Withdrawal(models.Model):
         ("failed", "Failed"),
     ]
     registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="withdrawals")
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)        # deducted from balance
+    fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # platform fee kept
     status = models.CharField(max_length=12, choices=STATUS, default="requested")
     reference = models.CharField(max_length=80, blank=True)
     paystack_transfer_code = models.CharField(max_length=80, blank=True)

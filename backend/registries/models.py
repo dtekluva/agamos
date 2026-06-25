@@ -156,8 +156,25 @@ class Registry(models.Model):
         return agg["s"] or 0
 
     @property
+    def pending_balance(self):
+        """Recently-received funds still in the settlement window (not yet withdrawable)."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from payments.models import Contribution
+        cutoff = timezone.now() - timedelta(hours=settings.SETTLEMENT_WINDOW_HOURS)
+        agg = Contribution.objects.filter(
+            gift__registry=self, status="success", paid_at__gte=cutoff
+        ).aggregate(s=Sum("amount"))
+        return agg["s"] or 0
+
+    @property
+    def cleared_raised(self):
+        return self.total_raised - self.pending_balance
+
+    @property
     def available_balance(self):
-        return self.total_raised - self.total_committed
+        # Only cleared (settled) funds, minus what's already committed to withdrawals.
+        return self.cleared_raised - self.total_committed
 
 
 class StoryMoment(models.Model):

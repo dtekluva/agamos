@@ -142,6 +142,17 @@ PAYSTACK_BASE_URL = "https://api.paystack.co"
 # whole flow is demoable without live credentials.
 PAYSTACK_MOCK_MODE = not bool(PAYSTACK_SECRET_KEY)
 
+# --- Wallet, withdrawal fee & KYC (Wishwell spec G/K, fee-agnostic) ---
+WITHDRAWAL_FEE_MODEL = os.getenv("WITHDRAWAL_FEE_MODEL", "flat")   # "flat" | "percent"
+WITHDRAWAL_FEE_FLAT = int(os.getenv("WITHDRAWAL_FEE_FLAT", "1000"))   # minor-unit-free naira
+WITHDRAWAL_FEE_PERCENT = float(os.getenv("WITHDRAWAL_FEE_PERCENT", "1.0"))
+MIN_WITHDRAWAL = int(os.getenv("MIN_WITHDRAWAL", "1000"))             # anti fee-stacking
+KYC_WITHDRAWAL_CAP = int(os.getenv("KYC_WITHDRAWAL_CAP", "100000"))   # all-time, unverified
+SETTLEMENT_WINDOW_HOURS = int(os.getenv("SETTLEMENT_WINDOW_HOURS", "24"))  # pending → cleared
+# No real KYC provider wired yet → stub auto-approves so the flow is testable.
+KYC_PROVIDER = os.getenv("KYC_PROVIDER", "")  # e.g. "smileid" | "dojah" | "prembly"
+KYC_AUTO_APPROVE = not bool(KYC_PROVIDER)
+
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # Built SPA dir — used to serve the index.html shell with OG meta for /r/<slug>.
 FRONTEND_DIST = os.getenv("FRONTEND_DIST", str(BASE_DIR.parent / "frontend" / "dist"))

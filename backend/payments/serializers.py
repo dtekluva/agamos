@@ -44,6 +44,6 @@ class ContributionSerializer(serializers.ModelSerializer):
 class WithdrawalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Withdrawal
-        fields = ("id", "registry", "amount", "status", "reference", "note",
+        fields = ("id", "registry", "amount", "fee", "status", "reference", "note",
                   "requested_at", "processed_at")
-        read_only_fields = ("status", "reference", "requested_at", "processed_at")
+        read_only_fields = ("fee", "status", "reference", "requested_at", "processed_at")

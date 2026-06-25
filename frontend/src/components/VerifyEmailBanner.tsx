@@ -30,7 +30,7 @@ export default function VerifyEmailBanner() {
     <div className="bg-warning/15 border-b border-warning/30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-ink">
-          <b>Verify your email</b> to unlock withdrawals. We sent a link to <b>{user.email}</b>.
+          <b>Confirm your email</b> so you don’t lose access — we sent a link to <b>{user.email}</b>.
         </p>
         <button onClick={resend} disabled={busy}
           className="text-sm font-semibold text-rose-deep underline underline-offset-2 disabled:opacity-60 whitespace-nowrap">

@@ -35,6 +35,11 @@ class User(AbstractUser):
     email_verified = models.BooleanField(default=False)
     appreciation_sent = models.BooleanField(default=False)  # one-time welcome/appreciation campaign guard
     is_claimed = models.BooleanField(default=True)  # False = anonymous guest draft, not yet a real account
+    # Identity verification (NIN + selfie) — unlocks withdrawals beyond the all-time cap.
+    KYC = [("none", "None"), ("pending", "Pending"), ("verified", "Verified"), ("rejected", "Rejected")]
+    kyc_status = models.CharField(max_length=10, choices=KYC, default="none")
+    kyc_submitted_at = models.DateTimeField(null=True, blank=True)
+    kyc_reviewed_at = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

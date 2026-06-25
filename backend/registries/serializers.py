@@ -75,6 +75,18 @@ class RegistrySerializer(serializers.ModelSerializer):
     total_raised = serializers.ReadOnlyField()
     total_withdrawn = serializers.ReadOnlyField()
     available_balance = serializers.ReadOnlyField()
+    pending_balance = serializers.ReadOnlyField()
+    withdrawal_fee = serializers.SerializerMethodField()
+
+    def get_withdrawal_fee(self, obj):
+        from django.conf import settings
+        return {
+            "model": settings.WITHDRAWAL_FEE_MODEL,
+            "flat": settings.WITHDRAWAL_FEE_FLAT,
+            "percent": settings.WITHDRAWAL_FEE_PERCENT,
+            "min_withdrawal": settings.MIN_WITHDRAWAL,
+            "kyc_cap": settings.KYC_WITHDRAWAL_CAP,
+        }
     gifts = GiftSerializer(many=True, read_only=True)
     moments = StoryMomentSerializer(many=True, read_only=True)
     gallery = GalleryImageSerializer(many=True, read_only=True)
@@ -86,7 +98,8 @@ class RegistrySerializer(serializers.ModelSerializer):
         fields = _EXHIBITION_FIELDS + (
             "bank_name", "bank_code", "account_number", "account_name",
             "paystack_recipient_code", "checkin_token",
-            "total_raised", "total_withdrawn", "available_balance",
+            "total_raised", "total_withdrawn", "available_balance", "pending_balance",
+            "withdrawal_fee",
             "gifts", "moments", "gallery", "tributes", "guest_uploads", "created_at",
         )
         read_only_fields = ("slug", "created_at", "paystack_recipient_code", "checkin_token")

@@ -66,8 +66,9 @@ class MagicLoginView(APIView):
             if guest:
                 Registry.objects.filter(owner=guest).update(owner=user)
                 guest.delete()
+        user.email_verified = True  # clicking the emailed link proves they own the address
         user.last_login = timezone.now()  # makes the link single-use (invalidates the token)
-        user.save(update_fields=["last_login"])
+        user.save(update_fields=["email_verified", "last_login"])
         refresh = RefreshToken.for_user(user)
         return Response({
             "user": UserSerializer(user).data,
@@ -309,3 +310,26 @@ class ClaimView(APIView):
         refresh = RefreshToken.for_user(guest)
         return Response({"user": UserSerializer(guest).data, "access": str(refresh.access_token),
                          "refresh": str(refresh), "merged": False})
+
+
+class KycSubmitView(APIView):
+    """Submit NIN + selfie to lift the withdrawal cap. No provider is wired yet,
+    so the stub auto-approves; a real provider would set pending → verified async."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.kyc_status == "verified":
+            return Response({"kyc_status": "verified", "detail": "You're already verified."})
+        nin = re.sub(r"\D", "", request.data.get("nin") or "")
+        if len(nin) != 11:
+            return Response({"nin": ["Enter your 11-digit NIN."]}, status=400)
+        # request.FILES.get("selfie") would go to the KYC provider; the stub ignores it.
+        user.kyc_submitted_at = timezone.now()
+        if settings.KYC_AUTO_APPROVE:
+            user.kyc_status = "verified"
+            user.kyc_reviewed_at = timezone.now()
+        else:
+            user.kyc_status = "pending"
+        user.save(update_fields=["kyc_status", "kyc_submitted_at", "kyc_reviewed_at"])
+        return Response({"kyc_status": user.kyc_status})

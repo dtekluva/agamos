@@ -86,7 +86,7 @@ def process_queued_withdrawals(qs):
                 reg.paystack_recipient_code = recipient
                 reg.save(update_fields=["paystack_recipient_code"])
             result = services.initiate_transfer(
-                amount_kobo=int(w.amount * 100), recipient_code=recipient,
+                amount_kobo=int((w.amount - w.fee) * 100), recipient_code=recipient,
                 reason=f"Agamos payout — {reg.couple_names}", reference=w.reference,
             )
         except services.PaystackError as e:
@@ -234,17 +234,13 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
+        user = self.request.user
         registry = serializer.validated_data["registry"]
         amount = serializer.validated_data["amount"]
-        if registry.owner != self.request.user:
+        if registry.owner != user:
             raise PermissionDenied("Not your registry.")
-        if not self.request.user.email_verified:
-            raise ValidationError(
-                {"detail": "Please verify your email before withdrawing. "
-                           "Check your inbox for the verification link, or resend it from your dashboard."}
-            )
-        if amount <= 0:
-            raise ValidationError({"amount": "Amount must be positive."})
+        if amount < settings.MIN_WITHDRAWAL:
+            raise ValidationError({"amount": f"Minimum withdrawal is {settings.MIN_WITHDRAWAL:,}."})
         if amount > registry.available_balance:
             raise ValidationError(
                 {"amount": f"Exceeds available balance ({registry.available_balance})."}
@@ -253,7 +249,20 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
             raise ValidationError(
                 {"detail": "Add your bank details before requesting a withdrawal."}
             )
+        # KYC tier: receiving is uncapped, but unverified hosts can only withdraw up
+        # to an all-time cap. Crossing it requires NIN + selfie verification.
+        cumulative = Withdrawal.objects.filter(
+            registry__owner=user, status__in=["paid", "processing", "queued"]
+        ).aggregate(s=Sum("amount"))["s"] or 0
+        if user.kyc_status != "verified" and (cumulative + amount) > settings.KYC_WITHDRAWAL_CAP:
+            raise ValidationError({
+                "detail": f"You can withdraw up to ₦{settings.KYC_WITHDRAWAL_CAP:,} before verifying your "
+                          "identity. Verify with your NIN + a selfie to unlock unlimited withdrawals.",
+                "kyc_required": True,
+            })
 
+        fee = services.compute_withdrawal_fee(amount)
+        net = amount - fee
         reference = services.gen_reference("wd")
         try:
             recipient = registry.paystack_recipient_code
@@ -266,7 +275,7 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
                 registry.paystack_recipient_code = recipient
                 registry.save(update_fields=["paystack_recipient_code"])
             result = services.initiate_transfer(
-                amount_kobo=int(amount * 100),
+                amount_kobo=int(net * 100),  # bank receives the net; platform keeps the fee
                 recipient_code=recipient,
                 reason=f"Agamos payout — {registry.couple_names}",
                 reference=reference,
@@ -276,15 +285,16 @@ class WithdrawalListCreateView(generics.ListCreateAPIView):
             if _is_unsettled(msg):
                 # Funds haven't settled with Paystack yet — queue it and send it
                 # automatically once settlement lands (no failure shown to the host).
-                w = serializer.save(reference=reference, status="queued")
+                w = serializer.save(reference=reference, fee=fee, status="queued")
                 emails.notify_withdrawal(w)
                 return
-            serializer.save(reference=reference, status="failed")
+            serializer.save(reference=reference, fee=fee, status="failed")
             raise ValidationError({"detail": msg})
 
         paid = result.get("status") == "success"
         w = serializer.save(
             reference=reference,
+            fee=fee,
             paystack_transfer_code=result.get("transfer_code", ""),
             status="paid" if paid else "processing",
             processed_at=timezone.now() if paid else None,

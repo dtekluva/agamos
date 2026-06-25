@@ -1,6 +1,7 @@
 """Paystack integration. Runs in MOCK mode when no secret key is configured so the
 full contribution + withdrawal flow is demoable without live credentials."""
 import secrets
+from decimal import Decimal, ROUND_HALF_UP
 
 import requests
 from django.conf import settings
@@ -10,6 +11,17 @@ PAYSTACK = settings.PAYSTACK_BASE_URL
 
 class PaystackError(Exception):
     pass
+
+
+def compute_withdrawal_fee(amount):
+    """Platform withdrawal fee — flat or percent per settings (fee-agnostic).
+    Capped at the amount so a withdrawal never nets negative."""
+    amount = Decimal(str(amount))
+    if settings.WITHDRAWAL_FEE_MODEL == "percent":
+        fee = amount * Decimal(str(settings.WITHDRAWAL_FEE_PERCENT)) / Decimal("100")
+    else:
+        fee = Decimal(str(settings.WITHDRAWAL_FEE_FLAT))
+    return min(fee, amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _headers():
