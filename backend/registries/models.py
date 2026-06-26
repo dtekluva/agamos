@@ -49,6 +49,11 @@ class Registry(models.Model):
         ("birthday", "Birthday"),
         ("memorial", "Memorial"),
     ]
+    VISIBILITY = [
+        ("public", "Public — anyone with the link, listed publicly"),
+        ("unlisted", "Unlisted — anyone with the link, not listed"),
+        ("invite_only", "Invite only — only invited guests (via their link)"),
+    ]
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                               related_name="registries")
@@ -81,6 +86,7 @@ class Registry(models.Model):
     show_guest_uploads = models.BooleanField(default=True)  # guests post their own photos/videos
     guest_uploads_allow_video = models.BooleanField(default=True)  # allow video, not just photos
     theme = models.CharField(max_length=20, choices=THEMES, default="blush")
+    visibility = models.CharField(max_length=12, choices=VISIBILITY, default="public")
 
     currency = models.CharField(max_length=3, default="NGN")
 
@@ -276,7 +282,8 @@ def gen_guest_token():
 class EventGuest(models.Model):
     """A person the host is inviting. Carries a unique token (personalised invite
     link + future door check-in) and a short human code as a fallback."""
-    RSVP = [("pending", "Pending"), ("yes", "Attending"), ("no", "Declined")]
+    RSVP = [("pending", "Pending"), ("yes", "Attending"),
+            ("maybe", "Maybe"), ("no", "Declined")]
     # Unambiguous alphabet for the short code (no O/0, I/1, etc.)
     _CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
@@ -288,6 +295,7 @@ class EventGuest(models.Model):
     code = models.CharField(max_length=12, unique=True, editable=False)
     rsvp_status = models.CharField(max_length=10, choices=RSVP, default="pending")
     party_size = models.PositiveSmallIntegerField(default=1)
+    table = models.CharField(max_length=40, blank=True)  # seating/table assignment
     invited_at = models.DateTimeField(null=True, blank=True)
     viewed_at = models.DateTimeField(null=True, blank=True)
     rsvp_at = models.DateTimeField(null=True, blank=True)

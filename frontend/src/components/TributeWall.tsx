@@ -5,15 +5,33 @@ import { apiError } from '../lib/errors'
 import { useToast } from '../lib/toast'
 import type { Tribute } from '../lib/types'
 
+interface Labels {
+  eyebrow: string
+  heading: string
+  cta: string
+  placeholder: string
+  success: string
+  empty: string
+  submit: string
+}
+
+const TRIBUTE_LABELS: Labels = {
+  eyebrow: 'Tributes', heading: 'Words of remembrance', cta: 'Leave a tribute',
+  placeholder: 'Share a memory or a message of comfort for the family…',
+  success: 'Your tribute has been shared 🕊️', empty: 'Be the first to leave a tribute.',
+  submit: 'Share tribute',
+}
+
 interface Props {
   registryId: number
   tributes: Tribute[]
   accent: CSSProperties
   cardStyle: CSSProperties
   onPosted: () => void
+  labels?: Labels
 }
 
-export default function TributeWall({ registryId, tributes, accent, cardStyle, onPosted }: Props) {
+export default function TributeWall({ registryId, tributes, accent, cardStyle, onPosted, labels = TRIBUTE_LABELS }: Props) {
   const toast = useToast()
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
@@ -26,36 +44,36 @@ export default function TributeWall({ registryId, tributes, accent, cardStyle, o
     try {
       await api.post('/tributes/', { registry: registryId, name, message })
       setName(''); setMessage(''); setOpen(false)
-      toast.success('Your tribute has been shared 🕊️')
+      toast.success(labels.success)
       onPosted()
     } catch (e2) {
-      setErr(apiError(e2, 'Could not post your tribute.'))
+      setErr(apiError(e2, 'Could not post your message.'))
     } finally { setBusy(false) }
   }
 
   return (
     <section id="tributes" className="py-12">
       <div className="text-center mb-8">
-        <span className="eyebrow mb-3" style={accent}>Tributes</span>
-        <h2 className="text-3xl font-semibold mb-4">Words of remembrance</h2>
-        {!open && <button onClick={() => setOpen(true)} className="btn-ghost btn-sm">Leave a tribute</button>}
+        <span className="eyebrow mb-3" style={accent}>{labels.eyebrow}</span>
+        <h2 className="text-3xl font-semibold mb-4">{labels.heading}</h2>
+        {!open && <button onClick={() => setOpen(true)} className="btn-ghost btn-sm">{labels.cta}</button>}
       </div>
 
       {open && (
         <form onSubmit={submit} className="card p-6 mb-8 max-w-xl mx-auto space-y-3" style={cardStyle}>
           {err && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2">{err}</div>}
           <input className="input" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <textarea className="input min-h-[110px]" placeholder="Share a memory or a message of comfort for the family…"
+          <textarea className="input min-h-[110px]" placeholder={labels.placeholder}
                     value={message} onChange={(e) => setMessage(e.target.value)} required />
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setOpen(false)} className="btn-ghost btn-sm">Cancel</button>
-            <button className="btn-primary btn-sm" disabled={busy}>{busy ? 'Posting…' : 'Share tribute'}</button>
+            <button className="btn-primary btn-sm" disabled={busy}>{busy ? 'Posting…' : labels.submit}</button>
           </div>
         </form>
       )}
 
       {tributes.length === 0 ? (
-        <p className="text-center text-muted">Be the first to leave a tribute.</p>
+        <p className="text-center text-muted">{labels.empty}</p>
       ) : (
         <div className="space-y-4 max-w-2xl mx-auto">
           {tributes.map((tr) => (

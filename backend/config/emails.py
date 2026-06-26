@@ -150,7 +150,8 @@ def notify_new_contribution(contribution):
             "View dashboard",
             f"{settings.FRONTEND_URL}/dashboard",
         )
-        _send(reg.owner.email, f"🎁 {who} sent you {amt} on Agamos", host_text, host_html)
+        if getattr(reg.owner, "notify_on_contribution", True):
+            _send(reg.owner.email, f"🎁 {who} sent you {amt} on Agamos", host_text, host_html)
 
         # Guest receipt (only if they shared an email)
         if contribution.guest_email:
@@ -293,6 +294,31 @@ def send_rsvp_confirmation_email(guest):
         return _send(guest.email, f"You’re confirmed for {host} ✅", text, html)
     except Exception:
         log.exception("rsvp confirmation email failed")
+        return 0
+
+
+def notify_host_rsvp(guest):
+    """Let the host know a guest replied to their invite (respects the host's
+    notification preference). Best-effort; never raises."""
+    try:
+        reg = guest.registry
+        owner = reg.owner
+        if not getattr(owner, "notify_on_rsvp", True) or not owner.email:
+            return 0
+        label = {"yes": "is coming 🎉", "maybe": "might come", "no": "can’t make it"}.get(
+            guest.rsvp_status, "replied")
+        extra = f" (party of {guest.party_size})" if guest.rsvp_status == "yes" else ""
+        text = (f"{guest.name} {label}{extra} to {reg.display_name}.\n\n"
+                f"See your full guest list: {settings.FRONTEND_URL.rstrip('/')}/dashboard/guests")
+        html = _wrap(
+            "New RSVP",
+            f"<b>{guest.name}</b> {label}{extra} to <b>{reg.display_name}</b>.",
+            "View guest list",
+            f"{settings.FRONTEND_URL.rstrip('/')}/dashboard/guests",
+        )
+        return _send(owner.email, f"RSVP: {guest.name} {label}", text, html)
+    except Exception:
+        log.exception("host rsvp notification failed")
         return 0
 
 

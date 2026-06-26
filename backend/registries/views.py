@@ -88,10 +88,16 @@ class PublicRegistryView(generics.RetrieveAPIView):
     def get_object(self):
         from rest_framework.exceptions import NotFound
         obj = super().get_object()
-        if not obj.published:
-            user = self.request.user
-            if not (user.is_authenticated and obj.owner_id == user.id):
-                raise NotFound("This event page isn’t published yet.")
+        user = self.request.user
+        is_owner = user.is_authenticated and obj.owner_id == user.id
+        if not obj.published and not is_owner:
+            raise NotFound("This event page isn’t published yet.")
+        # Invite-only: only the owner or someone holding a valid guest token (their
+        # personalised invite link passes ?g=<token>) may view the page.
+        if obj.visibility == "invite_only" and not is_owner:
+            tok = (self.request.query_params.get("g") or "").strip()
+            if not (tok and obj.guests.filter(token=tok).exists()):
+                raise NotFound("This event is invite-only.")
         return obj
 
 
@@ -235,8 +241,8 @@ class GuestRSVPView(APIView):
         if not guest:
             return Response({"detail": "Invite not found."}, status=404)
         status_in = request.data.get("rsvp_status")
-        if status_in not in ("yes", "no"):
-            return Response({"rsvp_status": ["Choose attending or can't make it."]}, status=400)
+        if status_in not in ("yes", "maybe", "no"):
+            return Response({"rsvp_status": ["Choose attending, maybe, or can't make it."]}, status=400)
         try:
             ps = int(request.data.get("party_size", guest.party_size) or 1)
         except (TypeError, ValueError):
@@ -249,6 +255,8 @@ class GuestRSVPView(APIView):
         # On a fresh 'attending', email the guest their entry pass (code + QR).
         if status_in == "yes" and not was_attending:
             emails.send_rsvp_confirmation_email(guest)
+        # Let the host know about the reply (respects their notification preference).
+        emails.notify_host_rsvp(guest)
         return Response(PublicGuestSerializer(guest, context={"request": request}).data)
 
 

@@ -269,7 +269,9 @@ export default function PublicRegistry() {
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-lg font-semibold">{g.title}</h3>
-                        {g.fully_funded && <span className="chip bg-success/10 text-success">{isMemorial ? 'Goal met ✓' : 'Funded ✓'}</span>}
+                        {g.kind === 'item' && g.is_reserved
+                          ? <span className="chip bg-soft text-muted">Reserved</span>
+                          : g.fully_funded && <span className="chip bg-success/10 text-success">{isMemorial ? 'Goal met ✓' : 'Funded ✓'}</span>}
                       </div>
                       {g.description && <p className="text-sm text-muted mt-1 line-clamp-2">{g.description}</p>}
                       {/* Keep the bar on every card for a balanced layout. Show the
@@ -287,7 +289,15 @@ export default function PublicRegistry() {
                         </div>
                       )}
                       <div className="mt-4 pt-2">
-                        {g.fully_funded ? (
+                        {g.kind === 'item' ? (
+                          g.is_reserved ? (
+                            <button className="btn-ghost w-full" disabled>Reserved{g.reserved_name ? ` by ${g.reserved_name.split(' ')[0]}` : ''} 🎁</button>
+                          ) : (
+                            <button className="btn w-full text-white px-6 py-3 shadow-card hover:-translate-y-0.5 transition"
+                                    style={{ background: `linear-gradient(135deg, ${t.ctaA}, ${t.ctaB})` }}
+                                    onClick={() => setGiftToFund(g)}>Reserve this gift</button>
+                          )
+                        ) : g.fully_funded ? (
                           <button className="btn-ghost w-full" disabled>{isMemorial ? 'Thank you 🤍' : 'Fully funded 🎉'}</button>
                         ) : (
                           <button className="btn w-full text-white px-6 py-3 shadow-card hover:-translate-y-0.5 transition"
@@ -303,10 +313,18 @@ export default function PublicRegistry() {
           </section>
         )}
 
-        {/* Tribute wall (memorial only) */}
-        {isMemorial && reg.show_tributes && (
+        {/* Wishes wall — tributes for a memorial, well-wishes for every other event */}
+        {reg.show_tributes && (
           <TributeWall registryId={reg.id} tributes={reg.tributes || []} accent={accent}
-                       cardStyle={cardStyle} onPosted={load} />
+                       cardStyle={cardStyle} onPosted={load}
+                       labels={isMemorial ? undefined : {
+                         eyebrow: 'Well-wishes', heading: 'Leave a message',
+                         cta: 'Write a wish',
+                         placeholder: `Share your wishes for ${reg.display_name}…`,
+                         success: 'Your message has been shared 💛',
+                         empty: 'Be the first to leave a message.',
+                         submit: 'Share my wish',
+                       }} />
         )}
       </div>
 

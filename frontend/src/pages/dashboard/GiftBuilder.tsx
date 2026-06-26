@@ -8,7 +8,7 @@ import { useToast } from '../../lib/toast'
 import { getEvent } from '../../lib/eventTypes'
 import type { Gift } from '../../lib/types'
 
-const blank = { title: '', description: '', image_url: '', category: 'other', target_amount: '', allow_partial: true, is_cash_fund: false, show_progress: true }
+const blank = { title: '', description: '', image_url: '', category: 'other', kind: 'goal', target_amount: '', allow_partial: true, is_cash_fund: false, show_progress: true }
 const catLabel = (c: string) => c.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 
 export default function GiftBuilder() {
@@ -36,12 +36,19 @@ export default function GiftBuilder() {
   const isMemorial = cfg.surface === 'memorial'
   const itemWord = isMemorial ? 'fund' : 'gift'
 
-  const openNew = () => { setForm({ ...blank, category: CATEGORIES[0] || 'other', is_cash_fund: isMemorial }); setFile(null); setEditing('new') }
+  const openNew = () => { setForm({ ...blank, category: CATEGORIES[0] || 'other', kind: isMemorial ? 'cash' : 'goal', is_cash_fund: isMemorial }); setFile(null); setEditing('new') }
   const openEdit = (g: Gift) => {
-    setForm({ title: g.title, description: g.description, image_url: g.image_url, category: g.category, target_amount: g.target_amount, allow_partial: g.allow_partial, is_cash_fund: g.is_cash_fund, show_progress: g.show_progress })
+    setForm({ title: g.title, description: g.description, image_url: g.image_url, category: g.category, kind: g.kind || (g.is_cash_fund ? 'cash' : 'goal'), target_amount: g.target_amount, allow_partial: g.allow_partial, is_cash_fund: g.is_cash_fund, show_progress: g.show_progress })
     setFile(null); setEditing(g.id)
   }
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
+  // Changing the gift type sets sensible defaults for the dependent flags.
+  const setKind = (kind: string) => setForm((f: any) => ({
+    ...f, kind,
+    is_cash_fund: kind === 'cash',
+    allow_partial: kind === 'item' ? false : (kind === 'cash' ? true : f.allow_partial),
+    show_progress: kind === 'item' ? false : f.show_progress,
+  }))
 
   const save = async (e: FormEvent) => {
     e.preventDefault(); setErr(''); setBusy(true)
@@ -54,6 +61,7 @@ export default function GiftBuilder() {
         body.append('title', form.title)
         body.append('description', form.description || '')
         body.append('category', form.category)
+        body.append('kind', form.kind)
         body.append('target_amount', form.target_amount || '0')
         body.append('allow_partial', String(form.allow_partial))
         body.append('is_cash_fund', String(form.is_cash_fund))
@@ -114,9 +122,20 @@ export default function GiftBuilder() {
               <input className="input" placeholder="…or paste an image URL" value={form.image_url}
                      onChange={(e) => set('image_url', e.target.value)} disabled={!!file} />
             </div>
+            <div className="sm:col-span-2">
+              <label className="label">Type</label>
+              <select className="input" value={form.kind} onChange={(e) => setKind(e.target.value)}>
+                <option value="goal">Funding goal — guests chip in toward a target</option>
+                <option value="cash">Cash fund — an open money pot, any amount</option>
+                <option value="item">Specific item — a physical gift guests can reserve</option>
+              </select>
+              {form.kind === 'item' && (
+                <p className="text-xs text-muted mt-1">Guests reserve this item (no payment) so no one buys it twice. The amount below is shown as its price.</p>
+              )}
+            </div>
             <div><label className="label">Category</label><select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></div>
-            <div><label className="label">Target amount ({registry.currency})</label><input type="number" min="0" className="input" value={form.target_amount} onChange={(e) => set('target_amount', e.target.value)} required /></div>
-            <div className="flex flex-col justify-end gap-3 text-sm sm:col-span-2">
+            <div><label className="label">{form.kind === 'item' ? 'Price' : 'Target amount'} ({registry.currency})</label><input type="number" min="0" className="input" value={form.target_amount} onChange={(e) => set('target_amount', e.target.value)} required /></div>
+            <div className={`flex-col justify-end gap-3 text-sm sm:col-span-2 ${form.kind === 'item' ? 'hidden' : 'flex'}`}>
               <div>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={form.allow_partial} disabled={form.is_cash_fund}

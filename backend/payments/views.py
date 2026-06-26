@@ -35,6 +35,15 @@ def _mark_guest_contributed(contribution):
         pass
 
 
+def _settle_amount(c, amount_kobo):
+    """Set the contribution's gift-credited amount from what Paystack actually
+    charged. When the giver covered the fee, back the fee out so the gift still
+    only counts the intended amount. (In mock mode amount_kobo is None → no-op.)"""
+    if amount_kobo:
+        charged = Decimal(amount_kobo) / 100
+        c.amount = (charged - c.card_fee) if c.fees_covered else charged
+
+
 def _reconcile_contributions(qs):
     """Confirm still-pending contributions directly with Paystack (replaces the webhook).
     Catches cases where the guest closed the tab before the verify callback ran."""
@@ -43,8 +52,7 @@ def _reconcile_contributions(qs):
         if mapped == "success":
             c.status = "success"
             c.paid_at = timezone.now()
-            if amount_kobo:
-                c.amount = Decimal(amount_kobo) / 100
+            _settle_amount(c, amount_kobo)
             c.save(update_fields=["status", "paid_at", "amount"])
             emails.notify_new_contribution(c)
             _mark_guest_contributed(c)
@@ -117,12 +125,23 @@ class ContributionInitView(APIView):
         reference = services.gen_reference()
         email = v.get("guest_email") or "guest@agamos.app"
 
+        # Reserved physical items can't be funded by a second guest (reserve-lock).
+        if gift.kind == "item" and gift.is_reserved:
+            raise ValidationError({"detail": "This gift has already been reserved."})
+
         # Attribute to an invited guest if they came via a personalised invite link.
         guest = None
         tok = (v.get("guest_token") or "").strip()
         if tok:
             from registries.models import EventGuest
             guest = EventGuest.objects.filter(token=tok, registry_id=gift.registry_id).first()
+
+        # Giver-pays-the-fee: the gift still receives the intended amount, but we
+        # charge the card the amount + card fee so nothing is lost to processing.
+        amount = v["amount"]
+        cover = v.get("cover_fees", False)
+        card_fee = services.compute_card_fee(amount) if cover else Decimal("0")
+        gross = amount + card_fee
 
         contribution = Contribution.objects.create(
             gift=gift,
@@ -131,7 +150,10 @@ class ContributionInitView(APIView):
             guest_email=v.get("guest_email", ""),
             message=v.get("message", ""),
             is_anonymous=v["is_anonymous"],
-            amount=v["amount"],
+            show_amount=v.get("show_amount", True),
+            amount=amount,
+            fees_covered=cover,
+            card_fee=card_fee,
             reference=reference,
             status="pending",
         )
@@ -142,7 +164,9 @@ class ContributionInitView(APIView):
                 "reference": reference,
                 "public_key": settings.PAYSTACK_PUBLIC_KEY,
                 "email": email,
-                "amount": str(v["amount"]),
+                "amount": str(gross),            # what the card is charged (incl. covered fee)
+                "gift_amount": str(amount),      # what counts toward the gift
+                "card_fee": str(card_fee),
                 "currency": gift.registry.currency,
                 "mock": settings.PAYSTACK_MOCK_MODE,
             },
@@ -171,8 +195,7 @@ class ContributionVerifyView(APIView):
                 contribution.status = "success"
                 contribution.paid_at = timezone.now()
                 # Trust the amount Paystack actually charged, not the client.
-                if amount_kobo:
-                    contribution.amount = Decimal(amount_kobo) / 100
+                _settle_amount(contribution, amount_kobo)
                 contribution.save(update_fields=["status", "paid_at", "amount"])
                 emails.notify_new_contribution(contribution)
                 _mark_guest_contributed(contribution)

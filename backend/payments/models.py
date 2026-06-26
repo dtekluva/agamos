@@ -14,8 +14,11 @@ class Contribution(models.Model):
     guest_name = models.CharField(max_length=120)
     guest_email = models.EmailField(blank=True)
     message = models.TextField(blank=True)
-    is_anonymous = models.BooleanField(default=False)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    is_anonymous = models.BooleanField(default=False)   # hide the giver's name
+    show_amount = models.BooleanField(default=True)     # show how much they gave (independent of name)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)  # counts toward the gift
+    fees_covered = models.BooleanField(default=False)   # giver chose to cover the card fee
+    card_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # fee they covered
     status = models.CharField(max_length=10, choices=STATUS, default="pending")
     thanked = models.BooleanField(default=False)
     host_notified = models.BooleanField(default=False)  # email-once guard for the host/guest notification
@@ -33,6 +36,11 @@ class Contribution(models.Model):
     @property
     def display_name(self):
         return "Someone" if self.is_anonymous else self.guest_name
+
+    @property
+    def display_amount(self):
+        """Two-axis privacy: amount is shown publicly only if the giver allowed it."""
+        return self.amount if self.show_amount else None
 
 
 class Withdrawal(models.Model):

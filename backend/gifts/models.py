@@ -23,18 +23,28 @@ class Gift(models.Model):
         ("charity", "Charity"),
         ("other", "Other"),
     ]
+    KIND_CHOICES = [
+        ("cash", "Cash fund"),       # open-ended money pot
+        ("goal", "Funding goal"),    # money toward a specific target (honeymoon, etc.)
+        ("item", "Specific item"),   # a physical gift — can be reserved (reserve-lock)
+    ]
     registry = models.ForeignKey(Registry, on_delete=models.CASCADE, related_name="gifts")
     title = models.CharField(max_length=140)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to=gift_upload_to, max_length=255, null=True, blank=True)
     image_url = models.URLField(blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="goal")
     target_amount = models.DecimalField(max_digits=12, decimal_places=2)
     allow_partial = models.BooleanField(default=True)
     is_cash_fund = models.BooleanField(default=False)
     show_progress = models.BooleanField(default=True)  # show the funding bar/amounts publicly
     sort_order = models.PositiveIntegerField(default=0)
     archived = models.BooleanField(default=False)
+    # Reserve-lock (kind="item"): a guest claims the item so no one double-buys it.
+    reserved_name = models.CharField(max_length=120, blank=True)
+    reserved_email = models.EmailField(blank=True)
+    reserved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -62,6 +72,10 @@ class Gift(models.Model):
     @property
     def fully_funded(self):
         return self.amount_raised >= self.target_amount
+
+    @property
+    def is_reserved(self):
+        return self.reserved_at is not None
 
     @property
     def display_image(self):

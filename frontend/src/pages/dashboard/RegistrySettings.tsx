@@ -15,7 +15,7 @@ const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR', 'KES', 'GHS']
 const EMPTY = {
   event_type: '', partner_one_name: '', partner_two_name: '', organiser_name: '',
   event_date: '', years_celebrated: '', turning_age: '', venue: '', city: '',
-  hero_message: '', our_story: '', cover_image_url: '', currency: 'NGN', theme: 'blush',
+  hero_message: '', our_story: '', cover_image_url: '', currency: 'NGN', theme: 'blush', visibility: 'public',
   show_story: true, show_timeline: true, show_gallery: true, show_event_details: true,
   show_registry: true, show_tributes: true, show_guest_uploads: true,
   guest_uploads_allow_video: true, published: false,
@@ -123,7 +123,7 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
     ['show_event_details', 'Event details'],
     ['show_registry', cfg.registryToggleLabel],
     ['show_guest_uploads', 'Guest photo & video wall'],
-    ...(isMemorial ? ([['show_tributes', 'Tribute wall']] as [string, string][]) : []),
+    ['show_tributes', isMemorial ? 'Tribute wall' : 'Well-wishes wall'],
   ]
 
   return (
@@ -203,6 +203,21 @@ export default function RegistrySettings({ forceNew = false }: { forceNew?: bool
         <div className="grid sm:grid-cols-2 gap-4">
           <div><label className="label">Currency</label><select className="input" value={form.currency} onChange={(e) => set('currency', e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div>
           <div><label className="label">Theme</label><select className="input" value={form.theme} onChange={(e) => set('theme', e.target.value)}>{THEME_LIST.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</select></div>
+        </div>
+        <div>
+          <label className="label">Who can see this page</label>
+          <select className="input" value={form.visibility} onChange={(e) => set('visibility', e.target.value)}>
+            <option value="public">Public — anyone with the link</option>
+            <option value="unlisted">Unlisted — anyone with the link, not promoted</option>
+            <option value="invite_only">Invite only — only invited guests via their link</option>
+          </select>
+          <p className="text-xs text-muted mt-1">
+            {form.visibility === 'invite_only'
+              ? 'Only people you’ve added to your guest list can open the page (through their personal invite link).'
+              : form.visibility === 'unlisted'
+                ? 'Reachable by link, but kept out of any public listings.'
+                : 'Anyone with the link can view and contribute.'}
+          </p>
         </div>
         <div>
           <label className="label">Show on your public page</label>

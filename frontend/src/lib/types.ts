@@ -1,4 +1,6 @@
-export type User = { id: number; email: string; full_name: string; phone?: string; email_verified?: boolean; is_claimed?: boolean; kyc_status?: 'none' | 'pending' | 'verified' | 'rejected' } | null
+export type User = { id: number; email: string; full_name: string; phone?: string; email_verified?: boolean; is_claimed?: boolean; kyc_status?: 'none' | 'pending' | 'verified' | 'rejected'; notify_on_contribution?: boolean; notify_on_rsvp?: boolean; notify_product?: boolean } | null
+
+export type GiftKind = 'cash' | 'goal' | 'item'
 
 export interface Gift {
   id: number
@@ -8,6 +10,7 @@ export interface Gift {
   image_url: string
   display_image: string | null
   category: string
+  kind: GiftKind
   target_amount: string
   allow_partial: boolean
   is_cash_fund: boolean
@@ -18,6 +21,9 @@ export interface Gift {
   pct_funded: number
   remaining: number
   fully_funded: boolean
+  is_reserved: boolean
+  reserved_name: string
+  reserved_at: string | null
 }
 
 export interface StoryMoment {
@@ -86,6 +92,7 @@ export interface Registry {
   show_guest_uploads: boolean
   guest_uploads_allow_video: boolean
   theme: string
+  visibility: 'public' | 'unlisted' | 'invite_only'
   currency: string
   published: boolean
   bank_name?: string
@@ -110,7 +117,11 @@ export interface Contribution {
   display_name: string
   message: string
   is_anonymous: boolean
+  show_amount: boolean
   amount: string
+  display_amount: string | null
+  fees_covered: boolean
+  card_fee: string
   status: string
   thanked: boolean
   reference: string

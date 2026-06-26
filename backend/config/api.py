@@ -7,7 +7,7 @@ from registries.views import (
     TributeViewSet, GuestUploadViewSet, EventGuestViewSet, GuestRSVPView, GuestPassQRView,
     CheckinInfoView, CheckinResolveView, CheckinSearchView, CheckinDoView,
 )
-from gifts.views import GiftViewSet
+from gifts.views import GiftViewSet, GiftReserveView
 from accounts.views import ContactView
 
 router = DefaultRouter()
@@ -23,6 +23,7 @@ urlpatterns = [
     path("auth/", include("accounts.urls")),
     path("contact", ContactView.as_view()),
     path("r/<slug:slug>", PublicRegistryView.as_view()),
+    path("gifts/<int:pk>/reserve", GiftReserveView.as_view()),
     path("i/<str:token>", GuestRSVPView.as_view()),
     path("i/<str:token>/qr.png", GuestPassQRView.as_view()),
     path("checkin/<str:door_token>", CheckinInfoView.as_view()),

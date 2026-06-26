@@ -96,6 +96,7 @@ class RegistrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Registry
         fields = _EXHIBITION_FIELDS + (
+            "visibility",
             "bank_name", "bank_code", "account_number", "account_name",
             "paystack_recipient_code", "checkin_token",
             "total_raised", "total_withdrawn", "available_balance", "pending_balance",
@@ -162,7 +163,7 @@ class EventGuestSerializer(serializers.ModelSerializer):
         model = EventGuest
         fields = (
             "id", "registry", "name", "email", "phone", "code", "token",
-            "rsvp_status", "party_size",
+            "rsvp_status", "party_size", "table",
             "invited_at", "viewed_at", "rsvp_at", "contributed_at", "checked_in_at", "created_at",
         )
         read_only_fields = (
@@ -177,7 +178,7 @@ class PublicGuestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventGuest
-        fields = ("name", "rsvp_status", "party_size", "code", "event")
+        fields = ("name", "rsvp_status", "party_size", "table", "code", "event")
 
     def get_event(self, obj):
         r = obj.registry

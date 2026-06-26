@@ -7,7 +7,7 @@ import { useToast } from '../../lib/toast'
 
 type Guest = {
   id: number; name: string; email: string; phone: string; code: string; token: string
-  rsvp_status: 'pending' | 'yes' | 'no'; party_size: number
+  rsvp_status: 'pending' | 'yes' | 'maybe' | 'no'; party_size: number; table: string
   invited_at: string | null; viewed_at: string | null; rsvp_at: string | null
   contributed_at: string | null; checked_in_at: string | null
 }
@@ -99,8 +99,16 @@ export default function Guests() {
     } finally { setRegen(false) }
   }
 
+  const setTable = async (g: Guest, table: string) => {
+    if (table === (g.table || '')) return
+    setGuests((gs) => gs.map((x) => x.id === g.id ? { ...x, table } : x))
+    try { await api.patch(`/guests/${g.id}/`, { table }) }
+    catch (e2) { toast.error(apiError(e2, 'Could not save the table.')); load() }
+  }
+
   const statusChip = (g: Guest) => {
     if (g.rsvp_status === 'yes') return <span className="chip bg-success/10 text-success">Attending · {g.party_size}</span>
+    if (g.rsvp_status === 'maybe') return <span className="chip bg-warning/15 text-ink">Maybe</span>
     if (g.rsvp_status === 'no') return <span className="chip bg-error/10 text-error">Declined</span>
     if (g.viewed_at) return <span className="chip bg-warning/15 text-ink">Viewed</span>
     if (g.invited_at) return <span className="chip">Invited</span>
@@ -110,6 +118,7 @@ export default function Guests() {
   // Summary
   const attending = guests.filter((g) => g.rsvp_status === 'yes')
   const heads = attending.reduce((s, g) => s + (g.party_size || 1), 0)
+  const maybe = guests.filter((g) => g.rsvp_status === 'maybe').length
   const declined = guests.filter((g) => g.rsvp_status === 'no').length
   const pending = guests.filter((g) => g.rsvp_status === 'pending').length
 
@@ -118,8 +127,9 @@ export default function Guests() {
       <h1 className="text-3xl font-semibold mb-1">Guests &amp; invites</h1>
       <p className="text-muted mb-6">Add the people you’re inviting, send each a personalised invitation, and track who’s coming.</p>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="card p-5"><p className="text-sm text-muted">Attending</p><p className="text-2xl font-display font-semibold mt-1 text-success">{heads}</p></div>
+        <div className="card p-5"><p className="text-sm text-muted">Maybe</p><p className="text-2xl font-display font-semibold mt-1 text-warning">{maybe}</p></div>
         <div className="card p-5"><p className="text-sm text-muted">Pending</p><p className="text-2xl font-display font-semibold mt-1">{pending}</p></div>
         <div className="card p-5"><p className="text-sm text-muted">Declined</p><p className="text-2xl font-display font-semibold mt-1 text-muted">{declined}</p></div>
       </div>
@@ -182,6 +192,12 @@ export default function Guests() {
                 {g.checked_in_at && <span className="chip bg-berry/10 text-berry">Checked in ✓</span>}
                 {statusChip(g)}
                 {g.contributed_at && <span className="chip bg-success/10 text-success">Gave 💝</span>}
+                {(g.rsvp_status === 'yes' || g.rsvp_status === 'maybe') && (
+                  <input defaultValue={g.table || ''} placeholder="Table"
+                    onBlur={(e) => setTable(g, e.target.value.trim())}
+                    title="Seating / table assignment"
+                    className="w-20 rounded-full border border-line px-3 py-1 text-xs" />
+                )}
                 <button onClick={() => invite(g)} disabled={actingId === g.id || !g.email}
                   title={g.email ? '' : 'Add an email to send an invite'}
                   className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-rose-deep hover:border-rose hover:bg-soft disabled:opacity-50">

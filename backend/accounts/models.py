@@ -40,6 +40,10 @@ class User(AbstractUser):
     kyc_status = models.CharField(max_length=10, choices=KYC, default="none")
     kyc_submitted_at = models.DateTimeField(null=True, blank=True)
     kyc_reviewed_at = models.DateTimeField(null=True, blank=True)
+    # Notification preferences (host emails — guest receipts always send).
+    notify_on_contribution = models.BooleanField(default=True)  # email me when a gift comes in
+    notify_on_rsvp = models.BooleanField(default=True)          # email me when a guest RSVPs
+    notify_product = models.BooleanField(default=True)          # occasional product/tips emails
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

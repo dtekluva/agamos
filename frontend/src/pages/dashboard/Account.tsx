@@ -11,6 +11,7 @@ export default function Account() {
   const toast = useToast()
 
   const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
   const [savingName, setSavingName] = useState(false)
   const [nameErr, setNameErr] = useState('')
 
@@ -18,17 +19,30 @@ export default function Account() {
   const [savingPw, setSavingPw] = useState(false)
   const [pwErr, setPwErr] = useState('')
 
-  useEffect(() => { setFullName(user?.full_name || '') }, [user?.full_name])
+  const [savingPref, setSavingPref] = useState('')
+
+  useEffect(() => { setFullName(user?.full_name || ''); setPhone(user?.phone || '') }, [user?.full_name, user?.phone])
 
   const saveName = async (e: FormEvent) => {
     e.preventDefault(); setNameErr(''); setSavingName(true)
     try {
-      await api.patch('/auth/me', { full_name: fullName })
+      await api.patch('/auth/me', { full_name: fullName, phone })
       await refreshUser()
       toast.success('Profile updated')
     } catch (e2) {
       setNameErr(apiError(e2, 'Could not update your profile.'))
     } finally { setSavingName(false) }
+  }
+
+  // Notification preferences save instantly on toggle.
+  const togglePref = async (key: 'notify_on_contribution' | 'notify_on_rsvp' | 'notify_product', value: boolean) => {
+    setSavingPref(key)
+    try {
+      await api.patch('/auth/me', { [key]: value })
+      await refreshUser()
+    } catch (e2) {
+      toast.error(apiError(e2, 'Could not save your preference.'))
+    } finally { setSavingPref('') }
   }
 
   const changePw = async (e: FormEvent) => {
@@ -75,10 +89,38 @@ export default function Account() {
             <label className="label">Full name</label>
             <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           </div>
+          <div>
+            <label className="label">Phone</label>
+            <input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +234…" />
+          </div>
           <div className="flex justify-end">
             <button className="btn-primary btn-sm" disabled={savingName}>{savingName ? 'Saving…' : 'Save profile'}</button>
           </div>
         </form>
+      </section>
+
+      <section className="card p-6">
+        <h3 className="font-semibold mb-1">Notifications</h3>
+        <p className="text-sm text-muted mb-4">Choose which emails we send you. Guests always get their own receipts and passes.</p>
+        <div className="space-y-2 text-sm">
+          {([
+            ['notify_on_contribution', 'When someone sends a gift', 'Get an email each time a contribution comes in.'],
+            ['notify_on_rsvp', 'When a guest RSVPs', 'Get an email when an invited guest replies.'],
+            ['notify_product', 'Product news & tips', 'Occasional updates and ideas from Agamos.'],
+          ] as const).map(([key, label, hint]) => {
+            const on = (user as any)?.[key] !== false
+            return (
+              <label key={key} className="flex items-start gap-3 rounded-lg border border-line px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={on} disabled={savingPref === key}
+                       onChange={(e) => togglePref(key, e.target.checked)} />
+                <span>
+                  <span className="font-medium text-ink">{label}</span>
+                  <span className="block text-xs text-muted">{hint}</span>
+                </span>
+              </label>
+            )
+          })}
+        </div>
       </section>
 
       <section className="card p-6">

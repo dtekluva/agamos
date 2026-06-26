@@ -11,7 +11,9 @@ class ContributionInitSerializer(serializers.Serializer):
     guest_name = serializers.CharField(max_length=120)
     guest_email = serializers.EmailField(required=False, allow_blank=True)
     message = serializers.CharField(required=False, allow_blank=True)
-    is_anonymous = serializers.BooleanField(default=False)
+    is_anonymous = serializers.BooleanField(default=False)   # hide name
+    show_amount = serializers.BooleanField(default=True)      # show amount (independent of name)
+    cover_fees = serializers.BooleanField(default=False)      # giver covers the card fee
     amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("100"))
     guest_token = serializers.CharField(required=False, allow_blank=True)  # from a personalised invite link
 
@@ -29,13 +31,15 @@ class ContributionInitSerializer(serializers.Serializer):
 
 class ContributionSerializer(serializers.ModelSerializer):
     display_name = serializers.ReadOnlyField()
+    display_amount = serializers.ReadOnlyField()
     gift_title = serializers.CharField(source="gift.title", read_only=True)
 
     class Meta:
         model = Contribution
         fields = (
             "id", "gift", "gift_title", "guest_name", "display_name", "guest_email",
-            "message", "is_anonymous", "amount", "status", "thanked", "reference",
+            "message", "is_anonymous", "show_amount", "amount", "display_amount",
+            "fees_covered", "card_fee", "status", "thanked", "reference",
             "created_at", "paid_at",
         )
         read_only_fields = fields

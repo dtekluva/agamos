@@ -5,10 +5,12 @@ import { apiError } from '../lib/errors'
 import { prettyDate } from '../lib/format'
 import { usePageTitle } from '../lib/usePageTitle'
 
+type RsvpChoice = 'yes' | 'maybe' | 'no'
 type Invite = {
   name: string
-  rsvp_status: 'pending' | 'yes' | 'no'
+  rsvp_status: 'pending' | RsvpChoice
   party_size: number
+  table: string
   code: string
   event: { display_name: string; slug: string; event_date: string | null; city: string; venue: string; published: boolean }
 }
@@ -20,7 +22,7 @@ export default function InvitePage() {
   const [errMsg, setErrMsg] = useState('')
   const [party, setParty] = useState(1)
   const [saving, setSaving] = useState(false)
-  const [done, setDone] = useState<'yes' | 'no' | null>(null)
+  const [done, setDone] = useState<RsvpChoice | null>(null)
   usePageTitle('Your invitation — Agamos')
 
   useEffect(() => {
@@ -33,10 +35,10 @@ export default function InvitePage() {
       .catch((e) => { setStatus('error'); setErrMsg(apiError(e, 'This invitation link is invalid.')) })
   }, [token])
 
-  const rsvp = async (choice: 'yes' | 'no') => {
+  const rsvp = async (choice: RsvpChoice) => {
     setSaving(true)
     try {
-      await api.post(`/i/${token}`, { rsvp_status: choice, party_size: choice === 'yes' ? party : 1 })
+      await api.post(`/i/${token}`, { rsvp_status: choice, party_size: choice === 'no' ? 1 : party })
       setDone(choice)
     } catch (e) {
       setErrMsg(apiError(e, 'Could not save your reply. Please try again.'))
@@ -74,11 +76,13 @@ export default function InvitePage() {
 
         {done ? (
           <div>
-            <div className={`w-14 h-14 rounded-full mx-auto mb-3 grid place-items-center text-white text-2xl ${done === 'yes' ? 'bg-success' : 'bg-muted'}`}>
-              {done === 'yes' ? '✓' : '✿'}
+            <div className={`w-14 h-14 rounded-full mx-auto mb-3 grid place-items-center text-white text-2xl ${done === 'yes' ? 'bg-success' : done === 'maybe' ? 'bg-warning' : 'bg-muted'}`}>
+              {done === 'yes' ? '✓' : done === 'maybe' ? '?' : '✿'}
             </div>
             <h2 className="text-xl font-semibold mb-1">
-              {done === 'yes' ? `See you there, ${first}! 🎉` : `Thanks for letting us know, ${first}.`}
+              {done === 'yes' ? `See you there, ${first}! 🎉`
+                : done === 'maybe' ? `Thanks, ${first} — we’ll hope to see you.`
+                : `Thanks for letting us know, ${first}.`}
             </h2>
             {done === 'yes' ? (
               <>
@@ -86,11 +90,14 @@ export default function InvitePage() {
                 <div className="rounded-2xl border border-line bg-soft/30 p-5 mb-3">
                   <p className="text-xs text-muted">Entry code</p>
                   <p className="font-mono text-2xl font-bold tracking-[0.25em] text-ink">{data.code}</p>
+                  {data.table && <p className="text-sm text-ink mt-2">Your table: <b>{data.table}</b></p>}
                   <img src={`${api.defaults.baseURL}/i/${token}/qr.png`} alt="Your entry QR code"
                        width={168} height={168} className="mx-auto mt-3 rounded-lg border border-line bg-white" />
                 </div>
                 <p className="text-xs text-muted mb-4">We’ve emailed this pass to you too.</p>
               </>
+            ) : done === 'maybe' ? (
+              <p className="text-muted text-sm mb-6">We’ve noted your maybe — update your reply any time. You can still send a gift below.</p>
             ) : (
               <p className="text-muted text-sm mb-6">You’ll be missed — but you can still send a gift below.</p>
             )}
@@ -105,9 +112,12 @@ export default function InvitePage() {
                      className="input w-20 py-2 text-center" />
             </div>
             {errMsg && <div className="rounded-lg bg-error/10 text-error text-sm px-3 py-2 mb-3">{errMsg}</div>}
-            <div className="flex gap-3">
-              <button onClick={() => rsvp('yes')} disabled={saving} className="btn-primary flex-1">{saving ? '…' : "I’ll be there"}</button>
-              <button onClick={() => rsvp('no')} disabled={saving} className="btn-ghost flex-1">Can’t make it</button>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => rsvp('yes')} disabled={saving} className="btn-primary">{saving ? '…' : "I’ll be there"}</button>
+              <div className="flex gap-3">
+                <button onClick={() => rsvp('maybe')} disabled={saving} className="btn-ghost flex-1">Maybe</button>
+                <button onClick={() => rsvp('no')} disabled={saving} className="btn-ghost flex-1">Can’t make it</button>
+              </div>
             </div>
           </div>
         )}

@@ -24,6 +24,18 @@ def compute_withdrawal_fee(amount):
     return min(fee, amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def compute_card_fee(amount):
+    """Estimate the Paystack card fee on a contribution so a giver can choose to
+    cover it (host then receives the full gift amount). Nigerian local-card rates:
+    1.5% + ₦100, the ₦100 waived under ₦2,500, capped at ₦2,000."""
+    amount = Decimal(str(amount))
+    fee = amount * Decimal("0.015")
+    if amount >= Decimal("2500"):
+        fee += Decimal("100")
+    fee = min(fee, Decimal("2000"))
+    return fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 def _headers():
     return {
         "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
